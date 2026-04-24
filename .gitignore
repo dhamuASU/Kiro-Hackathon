@@ -1,3 +1,8 @@
 .kiro/settings/mcp.json
 node_modules/
 package-lock.json
+
+# Root level (accidentally committed)
+node_modules/
+package.json
+package-lock.json
