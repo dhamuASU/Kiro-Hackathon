@@ -1,0 +1,28 @@
+{
+  "name": "frontend",
+  "description": "Frontend developer — React components, styling, UX, deployed to S3/CloudFront",
+  "prompt": "file://./prompts/frontend.md",
+  "tools": ["read", "write", "shell", "@github"],
+  "allowedTools": ["read"],
+  "toolsSettings": {
+    "write": { "allowedPaths": ["frontend/**", "shared/**", "package.json"] }
+  },
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/ui-design/SKILL.md",
+    "file://shared/types.ts"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      { "command": "git branch --show-current 2>/dev/null", "timeout_ms": 3000 }
+    ],
+    "postToolUse": [
+      { "matcher": "fs_write", "command": "bash .kiro/hooks/ts-review.sh", "timeout_ms": 5000 }
+    ],
+    "stop": [
+      { "command": "bunx prettier --write 'frontend/src/**/*.{ts,tsx,css}' 2>/dev/null || true", "timeout_ms": 15000 }
+    ]
+  },
+  "keyboardShortcut": "ctrl+2",
+  "welcomeMessage": "Frontend agent ready. What component or UI feature are we building?"
+}
