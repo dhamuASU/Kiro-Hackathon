@@ -1,4 +1,4 @@
-# DermaDecode — Full Project Spec & TODO
+# CleanLabel — Full Project Spec & TODO
 
 ## Status Legend
 - [ ] TODO — not started
@@ -22,7 +22,7 @@
 
 ## 1. GITHUB WORKFLOW — MCP Integration
 
-DermaDecode uses the GitHub MCP server (`gh mcp` extension) so Kiro agents can create, update, and track issues directly from chat.
+CleanLabel uses the GitHub MCP server (`gh mcp` extension) so Kiro agents can create, update, and track issues directly from chat.
 
 ### 1.1 Repo Setup
 - [ ] Repo created: `dhamuASU/Kiro-Hackathon` ✅
