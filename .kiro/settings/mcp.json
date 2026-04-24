@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "github": {
-      "type": "http",
-      "url": "https://api.github.com/mcp",
-      "oauth": { "oauthScopes": ["repo", "project", "issues"] }
+      "command": "gh",
+      "args": ["mcp"]
     },
     "aws-docs": {
       "command": "uvx",
