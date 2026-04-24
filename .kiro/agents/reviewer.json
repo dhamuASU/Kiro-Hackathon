@@ -1,0 +1,16 @@
+{
+  "name": "reviewer",
+  "description": "Code reviewer & security auditor — quality, OWASP, IAM, dependencies, read-only",
+  "prompt": "file://./prompts/reviewer.md",
+  "tools": ["read", "shell", "@github"],
+  "allowedTools": ["read", "@github", "shell"],
+  "toolsSettings": {
+    "shell": { "allowedCommands": ["grep *", "find *", "git diff*", "git log*", "wc *", "cat *", "bun audit*", "npm audit*"] }
+  },
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/owasp-nist/SKILL.md"
+  ],
+  "keyboardShortcut": "ctrl+5",
+  "welcomeMessage": "Reviewer agent ready. I check code quality AND security. What should I review?"
+}

@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "description": "Backend developer — Lambda handlers, API Gateway, DynamoDB operations",
+  "prompt": "file://./prompts/backend.md",
+  "tools": ["read", "write", "shell", "aws", "@github", "@aws-docs"],
+  "allowedTools": ["read", "@aws-docs"],
+  "toolsSettings": {
+    "write": { "allowedPaths": ["backend/**", "shared/**", "package.json"] },
+    "aws": { "allowedServices": ["dynamodb", "lambda", "apigateway", "logs", "s3"] }
+  },
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "skill://.kiro/skills/aws-lambda/SKILL.md",
+    "skill://.kiro/skills/dynamodb/SKILL.md",
+    "skill://.kiro/skills/api-gateway/SKILL.md",
+    "file://shared/types.ts"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      { "command": "git branch --show-current 2>/dev/null", "timeout_ms": 3000 }
+    ],
+    "postToolUse": [
+      { "matcher": "fs_write", "command": "bash .kiro/hooks/ts-review.sh", "timeout_ms": 5000 }
+    ],
+    "stop": [
+      { "command": "bunx prettier --write 'backend/src/**/*.ts' 2>/dev/null || true", "timeout_ms": 15000 }
+    ]
+  },
+  "keyboardShortcut": "ctrl+3",
+  "welcomeMessage": "Backend agent ready. What API endpoint or Lambda function do you need?"
+}
