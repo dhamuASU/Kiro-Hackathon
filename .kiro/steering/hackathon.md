@@ -1,45 +1,37 @@
-# Hackathon Guide
+# Hackathon Ownership Map
 
-## Team
-| Person | Role | Agent | Branch prefix |
-|--------|------|-------|---------------|
-| Person 1 | PM / Infra | `pm` or `infra` | `feat/infra-*` |
-| Person 2 | Frontend | `frontend` | `feat/frontend-*` |
-| Person 3 | Backend | `backend` | `feat/backend-*` |
+## Team roles
 
-## Getting Started
-```bash
-git clone <repo-url> && cd <project>
-bun install
+| Area | Owner | Files they edit |
+|------|-------|-----------------|
+| FastAPI backend (non-AI) | Backend | `api/routers/`, `api/schemas/`, `api/services/events.py`, `api/services/open_beauty_facts.py`, `api/db/migrations/`, `api/main.py`, `api/deps.py`, `api/config.py` |
+| AI layer | agents teammate | `api/services/agents/`, `api/services/llm/`, `api/services/ocr.py` |
+| Frontend | Frontend teammate | `web/` (separate directory — not committed in this repo yet) |
 
-# AWS login (everyone)
-aws configure sso
-# Start URL: <your-sso-url>
-# Region: us-east-1
+Files marked **OWNED BY AGENTS TEAMMATE** at the top of the module are stubs —
+the contract is defined, the implementation is theirs.
 
-# Start Kiro with your agent
-kiro-cli chat --agent pm          # Person 1
-kiro-cli chat --agent frontend    # Person 2
-kiro-cli chat --agent backend     # Person 3
-```
+## Working agreement
 
-## Deploy Order
-1. Person 1: `cdk deploy SharedStack` (DB, auth)
-2. Person 3: `cdk deploy BackendStack` (API)
-3. Person 2: `cdk deploy FrontendStack` (UI)
+- **Contract first.** Pydantic schemas in `api/schemas/` and the route
+  definitions in `api/routers/` are the contract between the three of us.
+  Change them = Slack announce + regen frontend types.
+- **Seeds are idempotent.** `002_seed_reference_data.sql` uses
+  `ON CONFLICT DO NOTHING` everywhere so re-running is safe.
+- **RLS is always on** for user-scoped tables (`profiles`, `user_products`,
+  `analyses`). The backend uses the service-role key for analysis writes.
+- **The analogy-first rule wins** any disagreement between design and
+  engineering. See `product.md`.
 
-## Workflow
-1. PM creates GitHub issues with labels (`frontend`, `backend`, `infra`)
-2. Devs check issues: "Check GitHub for my tasks"
-3. Dev works on branch, pushes, creates PR
-4. PM reviews status: "What's the status of all open issues?"
+## Demo day checklist
 
-## Budget
-- $10 hard limit set via AWS Budget
-- All serverless = likely $0
-- Alert at 80% ($8)
-
-## Cleanup
-```bash
-cdk destroy --all
-```
+- [ ] Backend deployed to Railway; `/api/health` returns 200
+- [ ] Frontend deployed to Vercel; landing loads; login works
+- [ ] Supabase project provisioned; both migrations applied; `ingredients`,
+      `analogies`, `bans`, `alternatives`, and `products` tables populated
+- [ ] End-to-end: sign up → onboard with pre-seeded demo persona → agent
+      theater fires on SSE → dashboard renders with at least one analogy
+      and one "banned in EU/CA/HI" chip and one swap
+- [ ] 3 demo personas ready (Maya / James / Priya)
+- [ ] 2–3 min unlisted YouTube walkthrough
+- [ ] Devpost / Airtable submission filed
