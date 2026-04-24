@@ -7,14 +7,16 @@
 
 ---
 
-## 0. TECH STACK
+## 0. TECH STACK — TODO (team to fill in)
 
-- [x] **Frontend**: Next.js 15 + TypeScript + Tailwind CSS v4
-- [ ] **Backend**: TBD
-- [ ] **Database**: TBD
-- [ ] **AI / LLM**: TBD
-- [ ] **Hosting / Deployment**: TBD (Vercel recommended for Next.js)
-- [x] **Package manager**: npm
+- [ ] **Frontend**: ???
+- [ ] **Backend**: ???
+- [ ] **Database**: ???
+- [ ] **AI / LLM**: ???
+- [ ] **Hosting / Deployment**: ???
+- [ ] **Package manager**: ???
+
+> ⚠️ Assign these before starting. All other todos depend on this.
 
 ---
 
@@ -290,28 +292,28 @@ IF product claims "natural/clean/organic/gentle"
 ## 6. FRONTEND — React Components
 
 ### 6.1 Search Screen
-- [x] `SearchBar` — text input with autocomplete dropdown
-- [x] `IngredientPaste` — expandable textarea for raw ingredient list
-- [x] `ImageUpload` — drag/drop or file picker with preview
-- [x] Loading + error states
+- [ ] `SearchBar` — text input with autocomplete dropdown
+- [ ] `IngredientPaste` — expandable textarea for raw ingredient list
+- [ ] `ImageUpload` — drag/drop or file picker with preview
+- [ ] Loading + error states
 
 ### 6.2 Gate Alert Components
-- [x] `DisclosureWarning` — yellow banner, blocks score, explains fragrance loophole
-- [x] `VulnerablePopulationAlert` — full-screen red modal, requires acknowledgment
-- [x] `GreenwashAlert` — orange banner with claims vs reality side-by-side
+- [ ] `DisclosureWarning` — yellow banner, blocks score, explains fragrance loophole
+- [ ] `VulnerablePopulationAlert` — full-screen red modal, requires acknowledgment
+- [ ] `GreenwashAlert` — orange banner with claims vs reality side-by-side
 
 ### 6.3 Analysis Dashboard
-- [x] `ScoreCard` — circular gauge, color-coded (🔴🟠🟡🟢)
-- [x] `ScoreRow` — 4 scores: Safety | Environmental | Transparency | Honesty
-- [x] `BannedElsewhereBanner` — "⚠️ X ingredients banned in EU" — tappable
-- [x] `IngredientList` — scrollable, color-coded by safety score
-- [x] `IngredientItem` — expandable: plain English + scores + flags + bans
-- [x] `SwapCard` — cleaner alternative with score + price comparison
+- [ ] `ScoreCard` — circular gauge, color-coded (🔴🟠🟡🟢)
+- [ ] `ScoreRow` — 4 scores: Safety | Environmental | Transparency | Honesty
+- [ ] `BannedElsewhereBanner` — "⚠️ X ingredients banned in EU" — tappable
+- [ ] `IngredientList` — scrollable, color-coded by safety score
+- [ ] `IngredientItem` — expandable: plain English + scores + flags + bans
+- [ ] `SwapCard` — cleaner alternative with score + price comparison
 
 ### 6.4 Routine Builder (P1)
-- [x] `RoutineBuilder` — add/remove products
-- [x] `RoutineSummary` — combined score + interactions + cumulative exposure
-- [x] `EnvironmentalDrainScore` — "Your routine sends Xg of chemicals into waterways daily"
+- [ ] `RoutineBuilder` — add/remove products
+- [ ] `RoutineSummary` — combined score + interactions + cumulative exposure
+- [ ] `EnvironmentalDrainScore` — "Your routine sends Xg of chemicals into waterways daily"
 
 ### 6.5 User Profile / Personalization (P1)
 - [ ] `ProfileSetup` — skin type, concerns, life stage, allergies (localStorage only)
