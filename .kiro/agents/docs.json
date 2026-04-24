@@ -2,16 +2,15 @@
   "name": "docs",
   "description": "Documentation writer — README, API docs, onboarding guides, demo scripts. Write-restricted to docs and markdown only.",
   "prompt": "file://./prompts/docs.md",
-  "tools": ["read", "write"],
-  "allowedTools": ["read"],
+  "tools": ["read", "write", "@notion"],
+  "allowedTools": ["read", "@notion"],
   "toolsSettings": {
     "write": { "allowedPaths": ["docs/**", "*.md", "README*", "CONTRIBUTING*"] }
   },
   "resources": [
     "file://.kiro/steering/**/*.md",
-    "file://README.md",
-    "file://shared/types.ts"
+    "file://README.md"
   ],
-  "keyboardShortcut": "ctrl+9",
-  "welcomeMessage": "Docs agent ready. I can only write to docs/ and markdown files. What needs documenting?"
+  "keyboardShortcut": "ctrl+7",
+  "welcomeMessage": "Docs agent ready. I can read/write Notion and local markdown files. What needs documenting?"
 }

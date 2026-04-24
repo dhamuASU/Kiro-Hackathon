@@ -5,7 +5,7 @@
   --sage: #B5E18B;
   --mint: #F0FFC2;
   --cream: #EAE6BC;
-  --score-green: #4ade80;
+  --score-green: #B5E18B;
   --score-yellow: #facc15;
   --score-orange: #fb923c;
   --score-red: #f87171;
@@ -14,4 +14,29 @@
 body {
   background-color: #ffffff;
   color: var(--navy);
+  font-family: ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Brand utility classes */
+.bg-navy    { background-color: var(--navy) !important; }
+.bg-sage    { background-color: var(--sage) !important; }
+.bg-mint    { background-color: var(--mint) !important; }
+.bg-cream   { background-color: var(--cream) !important; }
+.text-navy  { color: var(--navy) !important; }
+.text-sage  { color: var(--sage) !important; }
+.border-navy { border-color: var(--navy) !important; }
+
+/* Card style */
+.cl-card {
+  background: var(--cream);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(40,57,108,0.08), 0 8px 24px -12px rgba(40,57,108,0.18);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.cl-card:hover {
+  box-shadow: 0 4px 12px rgba(40,57,108,0.15);
+}
+
+/* Score gauge track */
+.score-track { stroke: rgba(40,57,108,0.08); }
