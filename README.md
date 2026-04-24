@@ -1,65 +1,99 @@
-# 🚀 Kiro Hackathon Setup
+# CleanLabel (DermaDecode)
 
-Pre-configured Kiro AI agents for a 3-person hackathon team on AWS.
+A personal skincare coach that explains the chemistry in your bathroom using
+everyday analogies — not scare tactics. Onboard once, tell us your skin type
+and goals, and a multi-agent AI breaks down your products the way a friend
+with a chemistry degree would.
 
-## Quick Start
+> **The pitch:** Yuka shouts *"TOXIC."* We say *"sulfates are like sugar — fine
+> in moderation, brutal at scale, and they're working against the hydration
+> goal you told us about."*
+
+## Repository layout
+
+```
+cleanlabel/
+├── api/                       # FastAPI backend (Python 3.12)
+│   ├── main.py                # App entry, routers, error-envelope handlers
+│   ├── config.py              # Env-driven settings (Supabase, Anthropic, OBF)
+│   ├── deps.py                # JWT verifier, Supabase client singleton
+│   ├── routers/               # HTTP endpoints — one module per cluster
+│   ├── schemas/               # Pydantic v2 contracts (source of truth)
+│   ├── services/
+│   │   ├── agents/            # Orchestrator + 5 sub-agents  (agents teammate)
+│   │   ├── llm/               # Anthropic wrapper + prompts   (agents teammate)
+│   │   ├── ocr.py             # Claude-vision label OCR       (agents teammate)
+│   │   ├── events.py          # SSE event bus
+│   │   └── open_beauty_facts.py  # OBF lookup + cache
+│   ├── db/
+│   │   └── migrations/        # 001_initial_schema.sql + 002_seed_reference_data.sql
+│   └── tests/
+├── .kiro/                     # Kiro steering, specs, hooks
+└── web/                       # Next.js frontend  (frontend teammate — not in this repo yet)
+```
+
+## Backend quick-start
 
 ```bash
-git clone <repo-url> && cd <project>
-bun install
-aws configure sso   # SSO URL + region from PM
-kiro-cli chat --agent <your-role>
+cd api
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -e .[dev]
+
+# 1. Create a Supabase project, then apply schema + seed:
+psql "$DATABASE_URL" -f db/migrations/001_initial_schema.sql
+psql "$DATABASE_URL" -f db/migrations/002_seed_reference_data.sql
+
+# 2. Configure env (see .env.example)
+cp .env.example .env
+# fill in SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET,
+# ANTHROPIC_API_KEY
+
+# 3. Run
+uvicorn main:app --reload --port 8000
+# OpenAPI: http://localhost:8000/docs
 ```
 
-## Agents
+## Stack
 
-| Shortcut | Agent | Who | Purpose |
-|----------|-------|-----|---------|
-| Ctrl+1 | `pm` | Person 1 | GitHub issues, status, coordination |
-| Ctrl+2 | `frontend` | Person 2 | React, UI, styling |
-| Ctrl+3 | `backend` | Person 3 | Lambda, API Gateway, DynamoDB |
-| Ctrl+4 | `infra` | Person 1 | CDK stacks, AWS, deploys |
-| Ctrl+5 | `reviewer` | Anyone | Code quality + security audit |
-| Ctrl+6 | `debug` | Anyone | Errors + incident response (auto-logged) |
-| Ctrl+7 | `docs` | Anyone | README, API docs, demo scripts |
+- **Backend:** FastAPI 0.111, Python 3.12, Pydantic v2, supabase-py, httpx
+- **AI:** Anthropic Claude (`claude-3-5-haiku-20241022` default) via `anthropic` SDK; vision for label OCR
+- **DB:** Supabase Postgres (RLS, JSONB, pg_trgm + GIN)
+- **Streaming:** Server-Sent Events via `sse-starlette` for live agent progress
+- **External:** Open Beauty Facts for product + ingredient lookup
 
-## Reusable Prompts
+## Multi-agent architecture (the centerpiece)
 
 ```
-@new-feature "add user auth"     → creates GitHub issues
-@code-review                     → reviews git diff
-@deploy-checklist                → pre-deploy safety checks
-@status-report                   → team progress summary
+                Orchestrator
+        ┌────────────┼────────────┐
+        │            │            │
+   Scanner    Profile Reasoner   Analogy Writer
+        │            │            │
+        └──── Alternative Finder ────┘
+                     │
+               Regulatory Xref  (pure SQL, no LLM)
 ```
 
-## Deploy
+Each sub-agent has a narrow input/output schema in `api/schemas/agent.py`
+and its own module in `api/services/agents/`. The orchestrator streams
+`agent.started` / `agent.progress` / `agent.done` events over SSE so the
+frontend can render the live theater during onboarding.
 
-```bash
-cdk deploy SharedStack      # Person 1 — DB, shared resources
-cdk deploy BackendStack     # Person 3 — API
-cdk deploy FrontendStack    # Person 2 — UI
-```
+## Team ownership
 
-Cleanup: `cdk destroy --all`
+| Area | Owner |
+|------|-------|
+| FastAPI routers, Pydantic schemas, Supabase migrations + seed, error envelope, SSE infra | You (backend) |
+| Orchestrator + 5 sub-agents, LLM client, prompt tuning, Claude-vision OCR | agents teammate |
+| Next.js app, onboarding wizard, dashboard, agent-theater UI | Frontend teammate |
 
-## Git
+Files marked `OWNED BY AGENTS TEAMMATE` at the top are stubs — the contract is
+defined, the implementation is theirs.
 
-```
-main                    ← protected
-feat/frontend-<desc>    ← Person 2
-feat/backend-<desc>     ← Person 3
-feat/infra-<desc>       ← Person 1
-```
+## What's not in scope for the hackathon
 
-## Cost & Permissions
-
-All serverless = **$0** (free tier). Budget alarm at $10.
-
-Teammates can use Lambda, DynamoDB, S3, API Gateway, CloudFront. Cannot use EC2, RDS, EKS, IAM admin, or billing.
-
-## First Steps
-
-1. PM fills in `.kiro/steering/product.md` with what you're building
-2. PM updates `.kiro/steering/api-contract.md` with agreed endpoints
-3. PM runs `@new-feature "<idea>"` to create GitHub issues
-4. Frontend + Backend pick up labeled issues and start building
+- Native mobile apps (web + mobile browser `getUserMedia` only)
+- Medical diagnosis / treatment claims
+- Binary "safe/unsafe" verdicts (always analogies and dose)
+- Training our own models (all AI is Claude)
+- The debunked "2kg of chemicals absorbed/year" stat
