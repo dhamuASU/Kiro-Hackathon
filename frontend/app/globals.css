@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #28396C;
+  --sage: #B5E18B;
+  --mint: #F0FFC2;
+  --cream: #EAE6BC;
+  --score-green: #4ade80;
+  --score-yellow: #facc15;
+  --score-orange: #fb923c;
+  --score-red: #f87171;
+}
+
+body {
+  background-color: #ffffff;
+  color: var(--navy);
+}
