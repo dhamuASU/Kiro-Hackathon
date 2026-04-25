@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Routine Builder · CleanLabel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#FBF7F1; --paper:#F4F2DF; --surface:#FFFFFF;
+    --sage:#B8D8BA; --sage-soft:#E4EFE3;
+    --teal:#7A6563; --mist:#FCDDBC; --mist-soft:#FCEAD3;
+    --terra:#CA2E55; --terra-deep:#A82446;
+    --ink:#3D2F2E; --muted:#7A6563; --hairline:#E8DFD2;
+    --serif:"Newsreader","Times New Roman",serif;
+    --sans:"Manrope",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:var(--sage);color:var(--bg)}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font:inherit;color:inherit}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:500;letter-spacing:-0.015em;line-height:1.05;margin:0}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:0.04em;text-transform:uppercase}
+  .muted{color:var(--muted)}
+
+  /* nav */
+  .nav{position:sticky;top:0;left:0;right:0;z-index:50;background:rgba(251,247,241,0.88);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--hairline)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1240px;margin:0 auto;padding:0 32px}
+  .wordmark{font-family:var(--serif);font-style:italic;font-size:24px;letter-spacing:-0.01em}
+  .wordmark .dot{display:inline-block;width:6px;height:6px;background:var(--terra);border-radius:50%;margin:0 0 5px 2px;vertical-align:middle}
+  .nav-links{display:flex;gap:32px}
+  .nav-links a{font-size:14px;color:var(--ink);position:relative;padding:4px 0;transition:color 200ms}
+  .nav-links a.active{color:var(--sage)}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:0;height:1px;width:100%;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform 250ms var(--ease)}
+  .nav-links a:hover::after,.nav-links a.active::after{transform:scaleX(1)}
+  .nav-cta{display:flex;align-items:center;gap:22px}
+  .nav-cta .signin{font-size:14px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--terra);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;letter-spacing:-0.005em;transition:background 150ms ease,transform 200ms var(--ease)}
+  .btn:hover{background:var(--terra-deep)}
+  .btn:disabled{opacity:0.5;cursor:not-allowed}
+  .btn .arrow{display:inline-block;transition:transform 200ms var(--ease)}
+  .btn:hover:not(:disabled) .arrow{transform:translateX(3px)}
+  .btn-lg{padding:14px 22px;font-size:15px}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--hairline)}
+  .btn-ghost:hover{background:var(--surface);border-color:var(--ink)}
+  @media (max-width:880px){.nav-links{display:none}}
+
+  /* layout */
+  .page{max-width:1240px;margin:0 auto;padding:48px 32px 96px}
+  .page-head{margin-bottom:48px;display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:end}
+  .page-head .eyebrow{color:var(--sage);margin-bottom:16px;display:inline-flex;align-items:center;gap:10px}
+  .page-head .eyebrow::before{content:"";width:24px;height:1px;background:var(--sage)}
+  .page-head h1{font-size:clamp(40px,5vw,60px);max-width:14ch}
+  .page-head .lede{color:var(--muted);font-size:17px;max-width:42ch}
+  @media (max-width:880px){.page-head{grid-template-columns:1fr;gap:24px;margin-bottom:36px}}
+
+  /* progress */
+  .progress{display:flex;align-items:center;gap:14px;margin-top:32px;padding:16px 20px;background:var(--surface);border:1px solid var(--hairline);border-radius:6px}
+  .progress .lbl{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .progress-bar{flex:1;height:4px;background:var(--hairline);border-radius:2px;overflow:hidden;position:relative}
+  .progress-fill{height:100%;background:var(--sage);width:0;transition:width 600ms var(--ease)}
+  .progress .count{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;color:var(--ink);white-space:nowrap}
+
+  /* layout: builder split */
+  .builder{display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
+  @media (max-width:1100px){.builder{grid-template-columns:1fr}}
+
+  /* category list */
+  .stack{display:grid;gap:16px}
+  .cat{background:var(--surface);border:1px solid var(--hairline);border-radius:6px;overflow:hidden;transition:border-color 200ms ease}
+  .cat.has-products{border-color:#D6E1D2;background:#FCFAF4}
+  .cat-head{display:grid;grid-template-columns:48px 1fr auto;gap:18px;align-items:center;padding:20px 22px;cursor:pointer;transition:background 150ms ease}
+  .cat-head:hover{background:rgba(232,239,230,0.4)}
+  .cat-icon{
+    width:48px;height:48px;border-radius:50%;
+    background:var(--sage-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-style:italic;font-size:22px;color:var(--sage);
+  }
+  .cat.has-products .cat-icon{background:var(--sage);color:#fff}
+  .cat-meta h3{font-family:var(--serif);font-size:24px;line-height:1.1;margin-bottom:2px}
+  .cat-meta .sub{color:var(--muted);font-size:13px}
+  .cat-meta .sub .step{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--sage);margin-right:8px}
+  .cat-action{display:flex;align-items:center;gap:14px}
+  .pill-count{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--sage);background:var(--sage-soft);padding:5px 10px;border-radius:999px;white-space:nowrap}
+  .chev{width:14px;height:14px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform 280ms var(--ease);margin-right:6px}
+  .cat.open .chev{transform:rotate(-135deg);margin-bottom:-4px}
+
+  .cat-body{max-height:0;overflow:hidden;transition:max-height 380ms var(--ease)}
+  .cat.open .cat-body{max-height:1200px}
+  .cat-body-inner{padding:0 22px 22px;border-top:1px solid var(--hairline);padding-top:18px}
+
+  /* product entries */
+  .products{display:grid;gap:10px;margin-bottom:14px}
+  .product{display:grid;grid-template-columns:1fr 100px 36px;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--hairline);border-radius:4px;padding:12px 14px}
+  .product .name{font-size:15px;color:var(--ink);font-weight:500}
+  .product .name .brand{color:var(--muted);font-weight:400;margin-right:6px}
+  .product .freq{font-family:var(--mono);font-size:11px;letter-spacing:0.04em;color:var(--muted);text-align:right;text-transform:uppercase}
+  .product .rm{
+    width:28px;height:28px;border-radius:50%;background:transparent;
+    display:flex;align-items:center;justify-content:center;color:var(--muted);
+    transition:background 150ms ease,color 150ms ease;
+    font-size:18px;line-height:1
+  }
+  .product .rm:hover{background:#F4E5DD;color:var(--terra-deep)}
+
+  /* add product row */
+  .add-row{display:grid;grid-template-columns:1fr 1fr 130px auto;gap:10px}
+  @media (max-width:760px){.add-row{grid-template-columns:1fr 1fr;}.add-row .add-btn{grid-column:1/-1}}
+  .field{position:relative}
+  .field label{position:absolute;top:8px;left:14px;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+  .input,.select{
+    width:100%;padding:24px 14px 10px;background:#fff;
+    border:1px solid var(--hairline);border-radius:4px;
+    font-size:14px;color:var(--ink);transition:border-color 150ms ease,box-shadow 150ms ease;
+    appearance:none;-webkit-appearance:none
+  }
+  .input:focus,.select:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(107,142,111,0.15)}
+  .select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 22px,calc(100% - 13px) 22px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  .add-btn{
+    background:var(--ink);color:#fff;border-radius:4px;
+    padding:0 18px;font-size:13px;font-weight:500;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    transition:background 150ms ease;height:48px
+  }
+  .add-btn:hover{background:var(--teal)}
+  .add-btn .plus{font-size:16px;line-height:1;margin-top:-2px}
+
+  .empty{
+    padding:14px 16px;background:transparent;border:1px dashed var(--hairline);border-radius:4px;
+    font-size:13px;color:var(--muted);margin-bottom:14px
+  }
+
+  /* sticky summary */
+  .summary{
+    background:var(--surface);border:1px solid var(--hairline);border-radius:6px;
+    padding:24px;position:sticky;top:88px;
+  }
+  .summary h4{font-family:var(--serif);font-size:24px;margin-bottom:6px}
+  .summary .desc{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:22px}
+  .summary-stats{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline);margin-bottom:22px}
+  .stat{padding:16px 0;text-align:left}
+  .stat:nth-child(2){padding-left:18px;border-left:1px solid var(--hairline)}
+  .stat .num{font-family:var(--serif);font-size:36px;line-height:1;color:var(--teal)}
+  .stat .lbl{font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+
+  .summary .preview{margin-bottom:18px}
+  .summary .preview-title{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .summary .flag{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:#FBF1EB;border-radius:4px;margin-bottom:8px;font-size:13px;line-height:1.4}
+  .summary .flag.ok{background:var(--sage-soft)}
+  .summary .flag .dot{width:7px;height:7px;border-radius:50%;background:var(--terra);margin-top:6px;flex-shrink:0}
+  .summary .flag.ok .dot{background:var(--sage)}
+  .summary .flag .ana{font-family:var(--serif);font-style:italic;color:var(--teal);margin-top:2px;display:block;font-size:13.5px}
+
+  .summary-cta{display:grid;gap:10px}
+  .summary-cta .btn{width:100%;justify-content:center}
+  .summary .scan-link{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    color:var(--sage);font-size:13px;padding:8px;
+  }
+  .summary .scan-link svg{width:14px;height:14px}
+
+  /* goals */
+  .goals{margin-bottom:32px;padding:24px;background:var(--surface);border:1px solid var(--hairline);border-radius:6px}
+  .goals h3{font-family:var(--serif);font-size:22px;margin-bottom:6px}
+  .goals .h-sub{color:var(--muted);font-size:13.5px;margin-bottom:18px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip-toggle{
+    padding:9px 14px;border-radius:999px;border:1px solid var(--hairline);
+    background:var(--bg);color:var(--ink);font-size:13.5px;
+    white-space:nowrap;
+    transition:all 180ms ease
+  }
+  .chip-toggle:hover{border-color:var(--muted)}
+  .chip-toggle.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+  /* footer hint */
+  .keyboard-hint{margin-top:24px;font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted)}
+  .keyboard-hint kbd{
+    display:inline-block;padding:3px 7px;background:var(--surface);border:1px solid var(--hairline);
+    border-radius:3px;margin:0 2px;font-family:var(--mono);font-size:10px;color:var(--ink)
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="CleanLabel.html" class="wordmark" aria-label="CleanLabel home">CleanLabel<span class="dot"></span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="CleanLabel.html#how">How it works</a>
+      <a href="routine.html" class="active">Routine builder</a>
+      <a href="scan.html">Scan</a>
+      <a href="CleanLabel.html#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#" class="signin">Sign in</a>
+      <a href="#" class="btn">Start free</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <div class="mono eyebrow">Step 02 &mdash; your bathroom</div>
+      <h1>Build your routine.<br><em style="font-style:italic;color:var(--teal)">We&rsquo;ll do the chemistry.</em></h1>
+    </div>
+    <p class="lede">Walk through your shelf one shelf at a time. Add what you actually use &mdash; even the &ldquo;I bought it once&rdquo; bottle. The more honest the routine, the better the analysis.</p>
+  </div>
+
+  <!-- Goals row -->
+  <div class="goals" id="goals">
+    <h3>What are you trying to fix?</h3>
+    <p class="h-sub">Pick up to three. The Profile Reasoner uses these to decide what matters in your shelf.</p>
+    <div class="chips" id="goals-chips">
+      <button class="chip-toggle on" data-goal="hydration">Hydration</button>
+      <button class="chip-toggle on" data-goal="acne">Less acne</button>
+      <button class="chip-toggle" data-goal="oil">Less oil</button>
+      <button class="chip-toggle" data-goal="aging">Anti-aging</button>
+      <button class="chip-toggle" data-goal="sensitivity">Less sensitivity</button>
+      <button class="chip-toggle on" data-goal="dryness">Scalp dryness</button>
+      <button class="chip-toggle" data-goal="brightening">Brightening</button>
+      <button class="chip-toggle" data-goal="texture">Texture</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress">
+    <span class="lbl">Shelf coverage</span>
+    <div class="progress-bar"><div class="progress-fill" id="bar"></div></div>
+    <span class="count" id="count">0 / 12 categories</span>
+  </div>
+
+  <div class="builder" style="margin-top:24px">
+    <div class="stack" id="stack">
+      <!-- categories injected by JS -->
+    </div>
+
+    <!-- Sticky summary -->
+    <aside class="summary">
+      <h4>Live preview</h4>
+      <p class="desc">As you add products, a small sample of what your report will say.</p>
+
+      <div class="summary-stats">
+        <div class="stat">
+          <div class="num" id="s-products">0</div>
+          <div class="lbl">Products</div>
+        </div>
+        <div class="stat">
+          <div class="num" id="s-flags">0</div>
+          <div class="lbl">Worth a chat</div>
+        </div>
+      </div>
+
+      <div class="preview">
+        <div class="preview-title">Sample analogies</div>
+        <div id="flags">
+          <div class="flag ok"><span class="dot"></span><span>Add a few products to see what we&rsquo;d say.<span class="ana">&ldquo;A coach with nothing to coach.&rdquo;</span></span></div>
+        </div>
+      </div>
+
+      <div class="summary-cta">
+        <button class="btn btn-lg" id="run-analysis" disabled>Run the analysis <span class="arrow">&rarr;</span></button>
+        <a href="scan.html" class="scan-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7V5a2 2 0 0 1 2-2h2M21 7V5a2 2 0 0 0-2-2h-2M3 17v2a2 2 0 0 0 2 2h2M21 17v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+          Or scan a barcode &rarr;
+        </a>
+      </div>
+
+      <div class="keyboard-hint"><kbd>&uarr;&darr;</kbd> jump categories &nbsp; <kbd>Enter</kbd> add</div>
+    </aside>
+  </div>
+</main>
+
+<script>
+(() => {
+  // ===== data =====
+  const CATEGORIES = [
+    { id:'cleanser',  step:'AM/PM', name:'Cleanser',           sub:'Face wash, milk, balm, oil', placeholders:{ brand:'CeraVe', name:'Foaming Cleanser' } },
+    { id:'toner',     step:'AM/PM', name:'Toner / Essence',    sub:'Balancing or hydrating',     placeholders:{ brand:'Klairs', name:'Supple Preparation' } },
+    { id:'serum',     step:'AM/PM', name:'Serums & Actives',   sub:'Vitamin C, niacinamide, retinol, AHA/BHA', placeholders:{ brand:'The Ordinary', name:'Niacinamide 10%' } },
+    { id:'eye',       step:'AM/PM', name:'Eye Cream',          sub:'Optional &mdash; only if you actually use one', placeholders:{ brand:'Kiehl\u2019s', name:'Avocado Eye Cream' } },
+    { id:'moisturizer', step:'AM/PM', name:'Moisturizer',      sub:'Day cream, night cream, gel',  placeholders:{ brand:'Vanicream', name:'Daily Facial' } },
+    { id:'spf',       step:'AM',    name:'Sunscreen',          sub:'Mineral, chemical, tinted',    placeholders:{ brand:'EltaMD', name:'UV Clear SPF 46' } },
+    { id:'mask',      step:'WEEKLY',name:'Masks & Exfoliants', sub:'Clay, sheet, peel, scrub',     placeholders:{ brand:'Paula\u2019s Choice', name:'2% BHA Liquid' } },
+    { id:'shampoo',   step:'HAIR',  name:'Shampoo',            sub:'Daily, clarifying, color-safe', placeholders:{ brand:'Head & Shoulders', name:'Daily Clarifying' } },
+    { id:'conditioner', step:'HAIR',name:'Conditioner',        sub:'Rinse-out, leave-in',          placeholders:{ brand:'Olaplex', name:'No. 5 Conditioner' } },
+    { id:'styling',   step:'HAIR',  name:'Hair Styling',       sub:'Cream, gel, oil, hairspray',   placeholders:{ brand:'Briogeo', name:'Curl Cream' } },
+    { id:'body',      step:'BODY',  name:'Body Wash & Lotion', sub:'Soap, body oil, hand cream',   placeholders:{ brand:'Aveeno', name:'Daily Moisturizing' } },
+    { id:'lips',      step:'OTHER', name:'Lip Care',           sub:'Balm, treatment, scrub',       placeholders:{ brand:'Aquaphor', name:'Lip Repair' } },
+  ];
+
+  const FREQS = [
+    { v:'1x_daily', label:'Once daily' },
+    { v:'2x_daily', label:'Twice daily' },
+    { v:'3x_week',  label:'3&times;/week' },
+    { v:'1x_week',  label:'Weekly' },
+    { v:'occasional', label:'Occasional' },
+  ];
+
+  // Sample seed so the page never feels empty on load
+  const STATE = {
+    goals: new Set(['hydration','acne','dryness']),
+    products: {
+      shampoo: [
+        { brand:'Head & Shoulders', name:'Daily Clarifying', freq:'2x_daily' }
+      ],
+      serum: [
+        { brand:'Skinceuticals', name:'CE Ferulic', freq:'1x_daily' },
+        { brand:'The Ordinary', name:'Granactive Retinoid 2%', freq:'3x_week' },
+        { brand:'Drunk Elephant', name:'A-Passioni Retinol', freq:'3x_week' }
+      ],
+      cleanser: [
+        { brand:'CeraVe', name:'Foaming Cleanser', freq:'2x_daily' }
+      ]
+    }
+  };
+
+  const stack = document.getElementById('stack');
+
+  // ===== render category cards =====
+  const freqLabel = (v) => (FREQS.find(f=>f.v===v) || {label:v}).label;
+
+  const renderProducts = (catId) => {
+    const items = STATE.products[catId] || [];
+    if (!items.length) {
+      return `<div class="empty">No products yet &mdash; add the first one below.</div>`;
+    }
+    return `<div class="products">${items.map((p,i) => `
+      <div class="product">
+        <div class="name"><span class="brand">${p.brand}</span>${p.name}</div>
+        <div class="freq">${freqLabel(p.freq)}</div>
+        <button class="rm" data-cat="${catId}" data-i="${i}" aria-label="Remove">&times;</button>
+      </div>
+    `).join('')}</div>`;
+  };
+
+  const renderCategory = (cat, isOpen) => {
+    const count = (STATE.products[cat.id] || []).length;
+    const has = count > 0;
+    return `
+      <section class="cat ${has?'has-products':''} ${isOpen?'open':''}" data-cat="${cat.id}">
+        <header class="cat-head" data-toggle="${cat.id}">
+          <div class="cat-icon">${cat.name.charAt(0)}</div>
+          <div class="cat-meta">
+            <h3>${cat.name}</h3>
+            <div class="sub"><span class="step">${cat.step}</span>${cat.sub}</div>
+          </div>
+          <div class="cat-action">
+            ${has ? `<span class="pill-count">${count} added</span>` : ''}
+            <span class="chev"></span>
+          </div>
+        </header>
+        <div class="cat-body">
+          <div class="cat-body-inner">
+            ${renderProducts(cat.id)}
+            <form class="add-row" data-add="${cat.id}">
+              <div class="field">
+                <label>Brand</label>
+                <input class="input" name="brand" placeholder="e.g. ${cat.placeholders.brand}" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label>Product name</label>
+                <input class="input" name="name" placeholder="e.g. ${cat.placeholders.name}" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label>Frequency</label>
+                <select class="select" name="freq">
+                  ${FREQS.map(f => `<option value="${f.v}" ${f.v==='1x_daily'?'selected':''}>${f.label.replace('&times;','x')}</option>`).join('')}
+                </select>
+              </div>
+              <button type="submit" class="add-btn"><span class="plus">+</span> Add</button>
+            </form>
+          </div>
+        </div>
+      </section>`;
+  };
+
+  const renderAll = () => {
+    const openId = stack.dataset.open;
+    stack.innerHTML = CATEGORIES.map(c => renderCategory(c, c.id === openId)).join('');
+    updateSummary();
+  };
+
+  // ===== summary computation =====
+  const updateSummary = () => {
+    const filledCats = CATEGORIES.filter(c => (STATE.products[c.id]||[]).length).length;
+    const totalProducts = Object.values(STATE.products).reduce((s,arr)=>s+arr.length,0);
+
+    document.getElementById('count').textContent = `${filledCats} / ${CATEGORIES.length} categories`;
+    document.getElementById('bar').style.width = `${(filledCats/CATEGORIES.length)*100}%`;
+    document.getElementById('s-products').textContent = totalProducts;
+
+    // generate sample flags from the actual state (rule-based, not a real LLM)
+    const flags = [];
+    const allNames = Object.entries(STATE.products).flatMap(([cat,arr]) =>
+      arr.map(p => ({...p, cat, full:`${p.brand} ${p.name}`.toLowerCase()}))
+    );
+    // Retinol stack
+    const retinolItems = allNames.filter(p => /retin|granactive|a-pass/i.test(p.full));
+    if (retinolItems.length >= 2) {
+      flags.push({
+        type:'warn',
+        head:`${retinolItems.length} retinol products`,
+        ana:'&ldquo;Like training for a marathon every day. Pick one. Use it 3&times;/week.&rdquo;'
+      });
+    }
+    // Sulfate + dryness goal
+    const hasSulfateShampoo = allNames.some(p => p.cat==='shampoo' && /clarifying|head & shoulders|sulfate/i.test(p.full));
+    if (hasSulfateShampoo && (STATE.goals.has('dryness')||STATE.goals.has('hydration'))) {
+      flags.push({
+        type:'warn',
+        head:'Sulfate shampoo + dryness goal',
+        ana:'&ldquo;Sulfates are like sugar. Fine sometimes, brutal twice daily.&rdquo;'
+      });
+    }
+    // Vitamin C clean
+    const hasVitC = allNames.some(p => /ce ferulic|vitamin c|ascorb/i.test(p.full));
+    if (hasVitC) {
+      flags.push({
+        type:'ok',
+        head:'Vitamin C',
+        ana:'&ldquo;Quiet workhorse. Working with you on the brightening goal.&rdquo;'
+      });
+    }
+    if (totalProducts >= 5 && !flags.length) {
+      flags.push({type:'ok',head:'Looking good',ana:'&ldquo;Nothing screaming at us &mdash; we&rsquo;ll write you a calm report.&rdquo;'});
+    }
+
+    document.getElementById('s-flags').textContent = flags.filter(f=>f.type==='warn').length;
+
+    const flagsEl = document.getElementById('flags');
+    if (totalProducts === 0) {
+      flagsEl.innerHTML = `<div class="flag ok"><span class="dot"></span><span>Add a few products to see what we&rsquo;d say.<span class="ana">&ldquo;A coach with nothing to coach.&rdquo;</span></span></div>`;
+    } else if (!flags.length) {
+      flagsEl.innerHTML = `<div class="flag ok"><span class="dot"></span><span>Reading your shelf &hellip;<span class="ana">&ldquo;Add a couple more so we can talk dose.&rdquo;</span></span></div>`;
+    } else {
+      flagsEl.innerHTML = flags.slice(0,3).map(f => `
+        <div class="flag ${f.type==='ok'?'ok':''}"><span class="dot"></span><span><strong>${f.head}</strong><span class="ana">${f.ana}</span></span></div>
+      `).join('');
+    }
+
+    document.getElementById('run-analysis').disabled = totalProducts < 3;
+  };
+
+  // ===== events =====
+  stack.addEventListener('click', (e) => {
+    const tg = e.target.closest('[data-toggle]');
+    if (tg) {
+      const id = tg.dataset.toggle;
+      const cat = stack.querySelector(`.cat[data-cat="${id}"]`);
+      const wasOpen = cat.classList.contains('open');
+      stack.querySelectorAll('.cat.open').forEach(c => c.classList.remove('open'));
+      if (!wasOpen) {
+        cat.classList.add('open');
+        stack.dataset.open = id;
+        // focus first input shortly after expand
+        setTimeout(() => cat.querySelector('input[name="brand"]')?.focus(), 280);
+      } else {
+        delete stack.dataset.open;
+      }
+      return;
+    }
+
+    const rm = e.target.closest('.rm');
+    if (rm) {
+      const cat = rm.dataset.cat;
+      const i = +rm.dataset.i;
+      STATE.products[cat]?.splice(i,1);
+      if (STATE.products[cat] && !STATE.products[cat].length) delete STATE.products[cat];
+      renderAll();
+      stack.querySelector(`.cat[data-cat="${cat}"]`)?.classList.add('open');
+      return;
+    }
+  });
+
+  stack.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-add]');
+    if (!form) return;
+    e.preventDefault();
+    const cat = form.dataset.add;
+    const fd = new FormData(form);
+    const brand = fd.get('brand').toString().trim();
+    const name  = fd.get('name').toString().trim();
+    const freq  = fd.get('freq').toString();
+    if (!brand && !name) {
+      form.querySelector('input[name="brand"]').focus();
+      return;
+    }
+    STATE.products[cat] = STATE.products[cat] || [];
+    STATE.products[cat].push({
+      brand: brand || '\u2014',
+      name:  name  || 'Unnamed product',
+      freq
+    });
+    renderAll();
+    stack.querySelector(`.cat[data-cat="${cat}"]`)?.classList.add('open');
+    setTimeout(() => stack.querySelector(`.cat[data-cat="${cat}"] input[name="brand"]`)?.focus(), 60);
+  });
+
+  // ===== goals =====
+  document.getElementById('goals-chips').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-goal]');
+    if (!btn) return;
+    const g = btn.dataset.goal;
+    if (STATE.goals.has(g)) {
+      STATE.goals.delete(g);
+      btn.classList.remove('on');
+    } else {
+      if (STATE.goals.size >= 3) return;
+      STATE.goals.add(g);
+      btn.classList.add('on');
+    }
+    updateSummary();
+  });
+
+  // ===== run analysis stub =====
+  document.getElementById('run-analysis').addEventListener('click', () => {
+    const btn = document.getElementById('run-analysis');
+    btn.disabled = true;
+    btn.innerHTML = 'Spinning up agents &hellip;';
+    setTimeout(() => { window.location.href = 'CleanLabel.html#reports'; }, 1100);
+  });
+
+  // open the most-populated empty category by default
+  const firstOpen = CATEGORIES.find(c => !(STATE.products[c.id]||[]).length);
+  if (firstOpen) stack.dataset.open = firstOpen.id;
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>

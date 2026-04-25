@@ -18,11 +18,19 @@ def _get_client():
     global _client
     if _client is None:
         from google import genai  # lazy import — avoids crash when mocked in tests
-        _client = genai.Client(
-            vertexai=True,
-            api_key=settings.vertexai_api_key,
-            location=settings.vertexai_location,
-        )
+        # An `AIzaSy…` key is a Gemini Developer API key, not a Vertex AI
+        # service-account credential. `vertexai=True` + `api_key` is rejected
+        # by google-genai ("Project/location and API key are mutually exclusive").
+        # Auto-detect: developer key → Developer API mode; otherwise Vertex.
+        api_key = settings.vertexai_api_key
+        if api_key and api_key.startswith("AIza"):
+            _client = genai.Client(api_key=api_key)
+        else:
+            _client = genai.Client(
+                vertexai=True,
+                project=getattr(settings, "vertexai_project", None) or None,
+                location=settings.vertexai_location,
+            )
     return _client
 
 

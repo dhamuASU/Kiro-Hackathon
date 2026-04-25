@@ -19,7 +19,9 @@ async def list_user_products(user: CurrentUser, db: SupabaseClient) -> list[User
 
 @router.post("", response_model=UserProductOut, status_code=201)
 async def add_user_product(body: UserProductCreate, user: CurrentUser, db: SupabaseClient) -> UserProductOut:
-    data = {**body.model_dump(exclude_none=True), "user_id": user["sub"]}
+    # mode="json" serializes UUID fields (product_id) to strings before
+    # supabase-py's httpx JSON encoder sees them.
+    data = {**body.model_dump(mode="json", exclude_none=True), "user_id": user["sub"]}
     result = db.table("user_products").insert(data).execute()
     return UserProductOut(**result.data[0])
 

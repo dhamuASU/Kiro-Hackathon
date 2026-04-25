@@ -1,32 +1,71 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { AgeRange, Gender, SkinGoal, SkinType } from "@/lib/types";
 
-export type SkinType = "sensitive" | "dry" | "oily" | "combination" | "normal";
-export type AgeRange = "under_18" | "18_24" | "25_34" | "35_44" | "45_54" | "55_plus";
-export type Gender = "female" | "male" | "non_binary" | "prefer_not_to_say";
-export type SkinGoal = "reduce_acne" | "anti_aging" | "even_tone" | "hydration" | "reduce_sensitivity" | "less_oil" | "maintenance";
+export interface PendingProduct {
+  category_slug: string;
+  product_id?: string | null;
+  custom_name?: string;
+  custom_ingredients?: string;
+  display_name?: string; // for UI only
+}
 
 interface OnboardingState {
-  step: number;
+  // Step 1 — profile
   ageRange: AgeRange | null;
   gender: Gender | null;
   skinType: SkinType | null;
+  // Step 2 — goals
   skinGoals: SkinGoal[];
+  // Step 3 — allergies (comma-separated free text)
   allergies: string;
-  setStep: (s: number) => void;
+  // Step 4 — products
+  products: PendingProduct[];
+
+  // actions
   setProfile: (p: Partial<Pick<OnboardingState, "ageRange" | "gender" | "skinType">>) => void;
   setGoals: (g: SkinGoal[]) => void;
+  toggleGoal: (g: SkinGoal, max?: number) => void;
   setAllergies: (a: string) => void;
+  addProduct: (p: PendingProduct) => void;
+  removeProduct: (idx: number) => void;
+  clearProducts: () => void;
+  reset: () => void;
 }
 
-export const useOnboarding = create<OnboardingState>((set) => ({
-  step: 1,
+const initial: Pick<
+  OnboardingState,
+  "ageRange" | "gender" | "skinType" | "skinGoals" | "allergies" | "products"
+> = {
   ageRange: null,
   gender: null,
   skinType: null,
   skinGoals: [],
   allergies: "",
-  setStep: (step) => set({ step }),
-  setProfile: (p) => set(p),
-  setGoals: (skinGoals) => set({ skinGoals }),
-  setAllergies: (allergies) => set({ allergies }),
-}));
+  products: [],
+};
+
+export const useOnboarding = create<OnboardingState>()(
+  persist(
+    (set, get) => ({
+      ...initial,
+      setProfile: (p) => set(p),
+      setGoals: (skinGoals) => set({ skinGoals }),
+      toggleGoal: (g, max = 3) => {
+        const { skinGoals } = get();
+        if (skinGoals.includes(g)) {
+          set({ skinGoals: skinGoals.filter((x) => x !== g) });
+        } else if (skinGoals.length < max) {
+          set({ skinGoals: [...skinGoals, g] });
+        }
+      },
+      setAllergies: (allergies) => set({ allergies }),
+      addProduct: (p) => set({ products: [...get().products, p] }),
+      removeProduct: (idx) =>
+        set({ products: get().products.filter((_, i) => i !== idx) }),
+      clearProducts: () => set({ products: [] }),
+      reset: () => set({ ...initial }),
+    }),
+    { name: "cleanlabel-onboarding" },
+  ),
+);

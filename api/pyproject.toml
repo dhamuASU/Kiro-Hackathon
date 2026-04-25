@@ -17,6 +17,9 @@ dependencies = [
     "python-jose[cryptography]==3.3.0",
     "python-multipart==0.0.9",
     "sse-starlette==2.1.0",
+    # Google Gen AI SDK — used by services/llm/client.py against Vertex AI
+    # (gemini-2.5-flash). Lazy-imported so pure-infra paths don't require it.
+    "google-genai>=1.0,<2",
 ]
 
 [project.optional-dependencies]

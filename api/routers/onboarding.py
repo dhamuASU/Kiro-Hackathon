@@ -18,9 +18,16 @@ async def save_profile(body: ProfileCreate, user: CurrentUser, db: SupabaseClien
 
 @router.post("/products", response_model=dict, status_code=201)
 async def save_products(body: UserProductBatchCreate, user: CurrentUser, db: SupabaseClient) -> dict:
-    """Step 4: batch-save user's products."""
+    """Step 4: batch-save user's products.
+
+    `mode="json"` on `model_dump` is critical — it turns the Pydantic
+    `UUID` fields (product_id) into strings, otherwise supabase-py's
+    downstream `json.dumps` chokes with
+    "Object of type UUID is not JSON serializable"."""
+    if not body.products:
+        return {"user_products": []}
     rows = [
-        {**p.model_dump(exclude_none=True), "user_id": user["sub"]}
+        {**p.model_dump(mode="json", exclude_none=True), "user_id": user["sub"]}
         for p in body.products
     ]
     result = db.table("user_products").insert(rows).execute()

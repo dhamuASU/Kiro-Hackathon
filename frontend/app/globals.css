@@ -1,66 +1,228 @@
 @import "tailwindcss";
 
-/* ── Design Tokens ─────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   CleanLabel design tokens — from cleanlabel_template/CleanLabel.html
+   ═══════════════════════════════════════════════════════════════ */
 :root {
-  --navy:          #28396C;
-  --navy-deep:     #1a2545;
-  --sage:          #B5E18B;
-  --sage-dark:     #4a9e4a;
-  --mint:          #F0FFC2;
-  --cream:         #EAE6BC;
-  --bg:            #FAF9F6;
+  /* Palette */
+  --bg:        #FBF7F1;
+  --paper:     #F4F2DF;
+  --surface:   #FFFFFF;
+  --sage:      #B8D8BA;
+  --sage-soft: #E4EFE3;
+  --teal:      #7A6563;
+  --mist:      #FCDDBC;
+  --mist-soft: #FCEAD3;
+  --terra:     #CA2E55;
+  --terra-deep:#A82446;
+  --ink:       #3D2F2E;
+  --muted:     #7A6563;
+  --hairline:  #E8DFD2;
 
-  --score-safe:    #4a9e4a;
-  --score-moderate:#d97706;
-  --score-concern: #ea580c;
-  --score-danger:  #dc2626;
+  /* Typography */
+  --serif: var(--font-newsreader), "Times New Roman", serif;
+  --sans:  var(--font-manrope), -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --mono:  var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  --radius-sm:     12px;
-  --radius-md:     20px;
-  --radius-lg:     28px;
-  --radius-pill:   999px;
+  /* Motion */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --shadow-soft:   0 2px 16px rgba(0,30,60,0.06), 0 1px 4px rgba(0,30,60,0.04);
-  --shadow-lift:   0 8px 32px rgba(0,30,60,0.10), 0 2px 8px rgba(0,30,60,0.06);
-  --shadow-float:  0 4px 24px rgba(0,30,60,0.08), 0 1px 4px rgba(0,30,60,0.04);
-
-  --glass-bg:      rgba(255,255,255,0.60);
-  --glass-border:  rgba(40,57,108,0.08);
+  /* Tailwind v4 inline theme */
+  --color-bg:        #FBF7F1;
+  --color-paper:     #F4F2DF;
+  --color-surface:   #FFFFFF;
+  --color-sage:      #B8D8BA;
+  --color-sage-soft: #E4EFE3;
+  --color-teal:      #7A6563;
+  --color-mist:      #FCDDBC;
+  --color-mist-soft: #FCEAD3;
+  --color-terra:     #CA2E55;
+  --color-terra-deep:#A82446;
+  --color-ink:       #3D2F2E;
+  --color-muted:     #7A6563;
+  --color-hairline:  #E8DFD2;
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-teal: var(--teal);
+  --color-mist: var(--mist);
+  --color-mist-soft: var(--mist-soft);
+  --color-terra: var(--terra);
+  --color-terra-deep: var(--terra-deep);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --font-serif: var(--serif);
+  --font-sans:  var(--sans);
+  --font-mono:  var(--mono);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 body {
-  background-color: var(--bg);
-  color: var(--navy);
-  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+::selection { background: var(--sage); color: var(--bg); }
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+
+/* Typography helpers */
+.font-serif  { font-family: var(--serif); }
+.font-sans   { font-family: var(--sans); }
+.font-mono   { font-family: var(--mono); }
+
+h1, h2, h3, h4 {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  margin: 0;
+}
+h1 { font-size: clamp(48px, 7vw, 88px); }
+h2 { font-size: clamp(40px, 5vw, 64px); line-height: 1.02; }
+h3 { font-size: clamp(26px, 3vw, 36px); }
+p  { margin: 0; }
+
+/* Mono eyebrow (e.g. "PERSONAL CHEMISTRY COACH") */
+.eyebrow-mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sage);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow-mono::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--sage);
 }
 
-/* ── Utility classes ───────────────────────────────────── */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-soft);
+/* Primary button (terra) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--terra);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  border: 0;
+  transition: background 150ms ease, transform 200ms var(--ease);
+}
+.btn:hover:not(:disabled) { background: var(--terra-deep); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn .arrow { display: inline-block; transition: transform 200ms var(--ease); }
+.btn:hover:not(:disabled) .arrow { transform: translateX(3px); }
+.btn-lg { padding: 16px 26px; font-size: 16px; }
+
+/* Secondary button (ghost) */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.btn-ghost:hover:not(:disabled) { background: var(--paper); border-color: var(--ink); }
+.btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Text link with underline */
+.text-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--sage); font-size: 15px; font-weight: 500;
+  border-bottom: 1px solid transparent; padding-bottom: 2px;
+  transition: border-color 200ms ease;
+}
+.text-link .arrow { transition: transform 200ms var(--ease); }
+.text-link:hover { border-bottom-color: var(--sage); }
+.text-link:hover .arrow { transform: translateX(3px); }
+
+/* Reveal-on-scroll */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity 600ms var(--ease), transform 600ms var(--ease); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal[data-delay="1"] { transition-delay: 80ms; }
+.reveal[data-delay="2"] { transition-delay: 160ms; }
+.reveal[data-delay="3"] { transition-delay: 240ms; }
+.reveal[data-delay="4"] { transition-delay: 320ms; }
+
+/* Paper card (used across dashboard, onboarding, reports) */
+.paper-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  transition: transform 260ms var(--ease), box-shadow 260ms var(--ease);
+}
+.paper-card-interactive:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -22px rgba(31,36,33,0.16); }
+
+/* Chip pills (banned-in, tags) */
+.chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 3px;
+  white-space: nowrap;
+  background: #F4E5DD;
+  color: var(--terra-deep);
+}
+.chip-clear { background: var(--sage-soft); color: var(--sage); }
+.chip-note  { background: var(--mist-soft); color: var(--teal); }
+
+/* Wordmark */
+.wordmark {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+.wordmark .dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--terra);
+  border-radius: 50%;
+  margin: 0 0 6px 2px;
+  vertical-align: middle;
 }
 
-.card {
-  background: var(--cream);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-soft);
-}
-
-.page-bg {
-  background: linear-gradient(160deg, var(--bg) 0%, var(--mint) 60%, var(--bg) 100%);
-  min-height: 100vh;
-}
-
-/* ── Skeleton animation ────────────────────────────────── */
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
+/* Keep shimmer for skeleton loading */
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 .skeleton {
-  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background: linear-gradient(90deg, var(--paper) 25%, var(--hairline) 50%, var(--paper) 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+  .reveal { opacity: 1; transform: none; }
 }

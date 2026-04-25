@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CleanLabel — A chemistry friend, on call.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #FBF7F1;
+    --paper:     #F4F2DF;
+    --surface:   #FFFFFF;
+    --sage:      #B8D8BA;
+    --sage-soft: #E4EFE3;
+    --teal:      #7A6563;
+    --mist:      #FCDDBC;
+    --mist-soft: #FCEAD3;
+    --terra:     #CA2E55;
+    --terra-deep:#A82446;
+    --ink:       #3D2F2E;
+    --muted:     #7A6563;
+    --hairline:  #E8DFD2;
+
+    --serif: "Newsreader", "Times New Roman", serif;
+    --sans:  "Manrope", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    --mono:  "JetBrains Mono", ui-monospace, monospace;
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--sage); color: var(--bg); }
+
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .serif { font-family: var(--serif); font-weight: 400; }
+  .italic { font-style: italic; }
+  .muted { color: var(--muted); }
+
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.015em; line-height: 1.05; margin: 0; }
+  h1 { font-size: clamp(48px, 7vw, 88px); }
+  h2 { font-size: clamp(40px, 5vw, 64px); line-height: 1.02; }
+  h3 { font-size: clamp(26px, 3vw, 36px); }
+  p  { margin: 0; }
+
+  /* ============ NAV ============ */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    transition: background 300ms var(--ease), border-color 300ms var(--ease), backdrop-filter 300ms var(--ease);
+    border-bottom: 1px solid transparent;
+  }
+  .nav.scrolled {
+    background: rgba(251, 247, 241, 0.88);
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    border-bottom-color: var(--hairline);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .wordmark { font-family: var(--serif); font-style: italic; font-size: 26px; letter-spacing: -0.01em; }
+  .wordmark .dot { display:inline-block; width:6px; height:6px; background: var(--terra); border-radius:50%; margin: 0 0 6px 2px; vertical-align: middle; }
+  .nav-links { display: flex; gap: 36px; }
+  .nav-links a { font-size: 14px; color: var(--ink); position: relative; padding: 4px 0; transition: color 200ms; }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; bottom: 0; height: 1px; width: 100%;
+    background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 250ms var(--ease);
+  }
+  .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-cta { display: flex; align-items: center; gap: 22px; }
+  .nav-cta .signin { font-size: 14px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--terra); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 500; letter-spacing: -0.005em;
+    transition: background 150ms ease, transform 200ms var(--ease);
+  }
+  .btn:hover { background: var(--terra-deep); }
+  .btn .arrow { display: inline-block; transition: transform 200ms var(--ease); }
+  .btn:hover .arrow { transform: translateX(3px); }
+  .btn-lg { padding: 16px 26px; font-size: 16px; }
+  .text-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--sage); font-size: 15px; font-weight: 500;
+    border-bottom: 1px solid transparent; padding-bottom: 2px;
+    transition: border-color 200ms ease;
+  }
+  .text-link .arrow { transition: transform 200ms var(--ease); }
+  .text-link:hover { border-bottom-color: var(--sage); }
+  .text-link:hover .arrow { transform: translateX(3px); }
+
+  @media (max-width: 880px) { .nav-links { display: none; } }
+
+  /* ============ HERO ============ */
+  .hero {
+    padding: 116px 0 88px;
+    position: relative;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 72px;
+    align-items: center;
+  }
+  @media (max-width: 1024px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .hero { padding: 104px 0 64px; }
+  }
+  .eyebrow {
+    color: var(--sage);
+    margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before {
+    content: ""; width: 24px; height: 1px; background: var(--sage);
+  }
+  .hero h1 .word { display: inline-block; opacity: 0; transform: translateY(12px); }
+  .hero h1 .punchline { display: block; font-style: italic; color: var(--teal); opacity: 0; transform: translateY(14px); }
+  .hero-sub {
+    margin-top: 28px; font-size: clamp(17px, 1.4vw, 20px); color: var(--muted);
+    max-width: 520px; line-height: 1.5;
+  }
+  .hero-ctas { margin-top: 36px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .trust {
+    margin-top: 28px; color: var(--muted); display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .trust span { display: inline-flex; align-items: center; gap: 8px; }
+  .trust .dot { width: 3px; height: 3px; background: var(--muted); border-radius: 50%; opacity: .5; }
+
+  /* Hero scanning bottle */
+  .bottle-stage {
+    position: relative; aspect-ratio: 4/5; width: 100%; max-width: 460px; margin-left: auto;
+    background: linear-gradient(180deg, #F1ECE0 0%, #EDE6D6 100%);
+    border-radius: 4px;
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+  }
+  .bottle-stage::before {
+    /* subtle paper texture / vignette */
+    content: ""; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.5), transparent 60%),
+      radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .bottle {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 56%; aspect-ratio: 1/1.55;
+  }
+  .bottle-body {
+    position: absolute; inset: 12% 0 0 0;
+    background: linear-gradient(180deg, #FFFDF8 0%, #F6F1E6 100%);
+    border-radius: 6px 6px 14px 14px;
+    box-shadow:
+      inset 0 0 0 1px rgba(31,36,33,0.08),
+      0 30px 60px -20px rgba(31,36,33,0.18),
+      0 8px 24px -10px rgba(31,36,33,0.12);
+  }
+  .bottle-cap {
+    position: absolute; top: 0; left: 18%; right: 18%; height: 13%;
+    background: linear-gradient(180deg, #2A4F4D 0%, #1F3D3B 100%);
+    border-radius: 3px 3px 2px 2px;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
+  }
+  .bottle-cap::after {
+    content:""; position:absolute; left: 0; right: 0; bottom: -3px; height: 4px;
+    background: #2A4F4D; border-radius: 1px;
+  }
+  .bottle-label {
+    position: absolute; left: 8%; right: 8%; top: 22%; bottom: 12%;
+    background: #FFFFFF;
+    border: 1px solid #EFE9DB;
+    padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+    overflow: hidden;
+  }
+  .label-brand {
+    font-family: var(--serif); font-style: italic; font-size: 18px;
+    color: var(--teal); margin-bottom: 4px;
+  }
+  .label-product {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--muted);
+    text-transform: uppercase;
+    padding-bottom: 8px; border-bottom: 1px solid var(--hairline); margin-bottom: 6px;
+  }
+  .label-heading {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; color: var(--ink);
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .ingredients {
+    font-family: var(--mono); font-size: 9.5px; line-height: 1.55; color: var(--ink);
+    word-spacing: 0.05em;
+  }
+  .ingredients .ing {
+    transition: background 280ms var(--ease), color 280ms var(--ease);
+    padding: 1px 2px; border-radius: 2px;
+    position: relative;
+  }
+  .ingredients .ing.hot {
+    background: #F4E5DD; color: var(--terra-deep);
+  }
+  .scanline {
+    position: absolute; left: -2%; right: -2%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(107,142,111,0.0), rgba(107,142,111,0.9), rgba(107,142,111,0.0), transparent);
+    box-shadow: 0 0 18px 4px rgba(107,142,111,0.35);
+    top: 22%;
+    animation: scan 6s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes scan {
+    0%   { top: 22%; opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { top: 88%; opacity: 0; }
+  }
+
+  .pill {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    padding: 9px 14px 9px 12px;
+    font-size: 12.5px;
+    color: var(--ink);
+    box-shadow: 0 14px 30px -10px rgba(31,36,33,0.18), 0 4px 10px -2px rgba(31,36,33,0.06);
+    display: inline-flex; align-items: center; gap: 9px;
+    white-space: nowrap;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity 400ms var(--ease), transform 400ms var(--ease);
+  }
+  .pill.show { opacity: 1; transform: translateY(0); }
+  .pill .swatch {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--terra);
+  }
+  .pill .ana { font-family: var(--serif); font-style: italic; color: var(--teal); margin-left: 2px; }
+  .pill-1 { right: -6%; top: 28%; }
+  .pill-2 { right: -2%; top: 52%; }
+  .pill-3 { left: -8%; top: 70%; }
+
+  /* ============ SECTIONS ============ */
+  section { padding: 96px 0; position: relative; }
+  @media (max-width: 768px) { section { padding: 72px 0; } }
+  .section-eyebrow { color: var(--sage); margin-bottom: 18px; }
+  .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: end; margin-bottom: 56px; }
+  .section-head h2 { max-width: 14ch; }
+  .section-head .lede { color: var(--muted); font-size: 18px; max-width: 46ch; }
+  @media (max-width: 880px) { .section-head { grid-template-columns: 1fr; gap: 24px; margin-bottom: 56px; } }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 600ms var(--ease), transform 600ms var(--ease); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .reveal[data-delay="1"] { transition-delay: 80ms; }
+  .reveal[data-delay="2"] { transition-delay: 160ms; }
+  .reveal[data-delay="3"] { transition-delay: 240ms; }
+  .reveal[data-delay="4"] { transition-delay: 320ms; }
+
+  /* ============ COMPARISON ============ */
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    border-top: 1px solid var(--hairline);
+  }
+  @media (max-width: 880px) { .compare { grid-template-columns: 1fr; } }
+  .compare-col { padding: 40px 0; }
+  .compare-col h4 {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 28px; font-weight: 500;
+  }
+  .compare-col.win h4 { color: var(--sage); }
+  .compare-col.lose { color: #8b8a82; }
+  .compare-col.lose .row { border-top: 1px solid #ECE6D8; }
+  .compare-col.win  { background: var(--sage-soft); margin: -40px -32px; padding: 40px 32px; border-radius: 4px; }
+  .compare-col.win .row { border-top: 1px solid #D6E1D2; }
+  .row { padding: 22px 0; font-size: 17px; line-height: 1.45; }
+  .row:first-of-type { border-top: none !important; }
+  .compare-col.win .row.analogy {
+    font-family: var(--serif); font-style: italic; font-size: 22px; color: var(--teal); line-height: 1.3;
+  }
+  .compare-col.lose .row.bad-quote {
+    color: #8b8a82;
+  }
+
+  /* ============ HOW IT WORKS ============ */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 880px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 36px 32px 40px;
+    transition: transform 260ms var(--ease), box-shadow 260ms var(--ease);
+  }
+  .step:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -20px rgba(31,36,33,0.15); }
+  .step .num { color: var(--sage); margin-bottom: 28px; }
+  .step h3 { margin-bottom: 14px; }
+  .step p { color: var(--muted); font-size: 16px; }
+  .step .extra {
+    margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    color: var(--muted); text-transform: uppercase;
+  }
+
+  /* ============ ORCHESTRATOR ============ */
+  .orch {
+    background: var(--teal);
+    color: #F2EBDD;
+    margin: 0;
+    padding: 104px 0;
+  }
+  .orch h2 { color: #F2EBDD; }
+  .orch h2 em { color: #B8D4D7; font-style: italic; }
+  .orch .section-eyebrow { color: var(--mist); }
+  .orch .section-head .lede { color: rgba(242,235,221,0.7); max-width: 50ch; }
+  .orch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  @media (max-width: 1024px) { .orch-grid { grid-template-columns: 1fr; gap: 48px; } }
+  .orch-copy p { color: rgba(242,235,221,0.78); font-size: 17px; line-height: 1.6; margin-bottom: 18px; }
+  .orch-copy .agents-list { margin-top: 28px; display: grid; gap: 10px; }
+  .orch-copy .agents-list li {
+    list-style: none; padding-left: 0;
+    display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: baseline;
+    font-size: 15px; color: rgba(242,235,221,0.85);
+    padding: 12px 0; border-top: 1px solid rgba(242,235,221,0.12);
+  }
+  .orch-copy .agents-list li:last-child { border-bottom: 1px solid rgba(242,235,221,0.12); }
+  .orch-copy .agents-list .name {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--mist);
+  }
+
+  .diagram {
+    aspect-ratio: 1/1; width: 100%; max-width: 520px; margin: 0 auto;
+    position: relative;
+  }
+  .diagram svg { width: 100%; height: 100%; display: block; }
+
+  /* ============ EXAMPLE REPORTS ============ */
+  .reports { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  @media (max-width: 1024px) { .reports { grid-template-columns: 1fr; max-width: 540px; margin: 0 auto; } }
+  .report {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    padding: 28px 28px 32px;
+    display: flex; flex-direction: column; min-height: 380px;
+    transition: transform 260ms var(--ease), box-shadow 260ms var(--ease);
+  }
+  .report:hover { transform: translateY(-4px); box-shadow: 0 24px 40px -22px rgba(31,36,33,0.16); }
+  .report .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+  .report .ingr { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink); text-transform: uppercase; }
+  .report .source { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--muted); }
+  .report .chip {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 3px; white-space: nowrap;
+    background: #F4E5DD; color: var(--terra-deep);
+  }
+  .report .chip.clear { background: var(--sage-soft); color: var(--sage); }
+  .report .chip.note  { background: var(--mist-soft); color: var(--teal); }
+  .report .body {
+    font-family: var(--serif); font-style: italic; color: var(--teal);
+    font-size: 24px; line-height: 1.25; flex: 1;
+    margin-bottom: 24px;
+  }
+  .report .body.clean { color: var(--sage); }
+  .report .swap {
+    margin-top: auto; padding-top: 20px; border-top: 1px dashed var(--hairline);
+    display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+  }
+  .report .swap .k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+  .report .swap .v { font-size: 14px; color: var(--ink); text-align: right; max-width: 60%; }
+
+  .report-foot { margin-top: 36px; color: var(--muted); display: flex; gap: 18px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+  .report-foot::before { content:""; width: 36px; height: 1px; background: var(--hairline); }
+
+  /* ============ PERSONAS ============ */
+  .personas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  @media (max-width: 1024px) { .personas { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .personas { grid-template-columns: 1fr; } }
+  .persona {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform 260ms var(--ease);
+  }
+  .persona:hover { transform: translateY(-4px); }
+  .persona .photo {
+    aspect-ratio: 4/5;
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    /* placeholder photo treatment: subtle stripes + label */
+    background-color: #E9E1CF;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,0.18) 0px,
+      rgba(255,255,255,0.18) 1px,
+      transparent 1px,
+      transparent 14px
+    );
+  }
+  .persona .photo::after {
+    content: attr(data-caption);
+    position: absolute; left: 14px; top: 14px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .persona .photo[data-tone="b"] { background-color: #DEDFD0; }
+  .persona .photo[data-tone="c"] { background-color: #D7DFD9; }
+  .persona .photo[data-tone="d"] { background-color: #E0DAC6; }
+  .persona .quote {
+    font-family: var(--serif); font-style: italic; font-size: 22px; line-height: 1.3;
+    color: var(--teal); padding: 28px 24px 14px;
+  }
+  .persona .who { padding: 0 24px 26px; color: var(--muted); font-size: 13px; }
+  .illust-note { margin-top: 24px; color: var(--muted); font-size: 12px; font-family: var(--mono); letter-spacing: 0.04em; }
+
+  /* ============ RECEIPTS ============ */
+  .receipts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+  @media (max-width: 880px) { .receipts { grid-template-columns: 1fr; } }
+  .receipt {
+    padding: 40px 32px;
+    border-right: 1px solid var(--hairline);
+  }
+  .receipt:last-child { border-right: none; }
+  @media (max-width: 880px) {
+    .receipt { border-right: none; border-bottom: 1px solid var(--hairline); padding: 32px 0; }
+    .receipt:last-child { border-bottom: none; }
+  }
+  .receipt .label { color: var(--sage); margin-bottom: 16px; }
+  .receipt h4 { font-family: var(--serif); font-size: 28px; line-height: 1.1; margin-bottom: 12px; }
+  .receipt p { color: var(--muted); font-size: 15px; }
+
+  /* ============ FAQ ============ */
+  .faq-list { border-top: 1px solid var(--hairline); }
+  .faq-item { border-bottom: 1px solid var(--hairline); }
+  .faq-q {
+    width: 100%; text-align: left; padding: 28px 0;
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    font-family: var(--serif); font-size: clamp(22px, 2.4vw, 28px); color: var(--ink);
+    transition: color 200ms ease;
+  }
+  .faq-q:hover { color: var(--sage); }
+  .faq-q .plus { font-family: var(--sans); font-size: 22px; color: var(--muted); transition: transform 280ms var(--ease); flex-shrink: 0; line-height: 1; }
+  .faq-item.open .faq-q .plus { transform: rotate(45deg); color: var(--sage); }
+  .faq-a {
+    max-height: 0; overflow: hidden;
+    transition: max-height 400ms var(--ease), padding 400ms var(--ease);
+    color: var(--muted); font-size: 17px; line-height: 1.6;
+  }
+  .faq-item.open .faq-a { max-height: 280px; padding: 0 0 28px; }
+
+  /* ============ FINAL CTA ============ */
+  .final {
+    background: var(--sage);
+    color: #FBF8F1;
+    text-align: center;
+    padding: 112px 0;
+  }
+  .final h2 { color: #FBF8F1; max-width: 16ch; margin: 0 auto 24px; }
+  .final h2 em { font-style: italic; }
+  .final p { color: rgba(251,248,241,0.8); font-size: 18px; max-width: 44ch; margin: 0 auto 40px; }
+  .final .btn { background: var(--terra); }
+  .final .btn:hover { background: var(--terra-deep); }
+  .final .tiny { color: rgba(251,248,241,0.65); margin-top: 22px; font-size: 12px; }
+
+  /* ============ FOOTER ============ */
+  footer { padding: 64px 0 48px; border-top: 1px solid var(--hairline); }
+  .foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+  @media (max-width: 768px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+  .foot-grid h5 { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 0 0 16px; }
+  .foot-grid ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .foot-grid a { font-size: 15px; color: var(--ink); }
+  .foot-grid a:hover { color: var(--sage); }
+  .foot-bottom { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; padding-top: 24px; border-top: 1px solid var(--hairline); color: var(--muted); }
+  .foot-bottom .built { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+    .scanline { display: none; }
+    .reveal { opacity: 1; transform: none; }
+    .hero h1 .word, .hero h1 .punchline { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a href="#" class="wordmark" aria-label="CleanLabel home">CleanLabel<span class="dot"></span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#how">How it works</a>
+      <a href="routine.html">Routine builder</a>
+      <a href="scan.html">Scan</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#" class="signin">Sign in</a>
+      <a href="#" class="btn">Start free</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="mono eyebrow">Personal chemistry coach</div>
+      <h1 id="hero-h1">
+        <span class="line line-a">Most ingredients aren&rsquo;t bad.</span>
+        <span class="line line-b punchline">Some just aren&rsquo;t bad <em>for&nbsp;you</em>.</span>
+      </h1>
+      <p class="hero-sub reveal" data-delay="3">
+        Tell us your skin and your goals. We&rsquo;ll decode every product in your bathroom &mdash; and explain the chemistry like a friend, not a label.
+      </p>
+      <div class="hero-ctas reveal" data-delay="4">
+        <a href="#" class="btn btn-lg">Decode my bathroom <span class="arrow">&rarr;</span></a>
+        <a href="#reports" class="text-link">See an example report <span class="arrow">&rarr;</span></a>
+      </div>
+      <div class="trust mono reveal" data-delay="4">
+        <span>3-minute onboarding</span>
+        <span class="dot"></span>
+        <span>No selling your data</span>
+        <span class="dot"></span>
+        <span>Built on Open Beauty Facts</span>
+      </div>
+    </div>
+
+    <!-- Scanning bottle -->
+    <div class="bottle-stage reveal" data-delay="2" aria-hidden="true">
+      <div class="bottle">
+        <div class="bottle-cap"></div>
+        <div class="bottle-body">
+          <div class="bottle-label">
+            <div class="label-brand">field &amp; co.</div>
+            <div class="label-product">Daily Clarifying Shampoo &middot; 250ml</div>
+            <div class="label-heading">Ingredients</div>
+            <div class="ingredients" id="ingredients">Aqua, <span class="ing" data-ana="sulfate">Sodium Lauryl Sulfate</span>, Cocamidopropyl Betaine, Glycerin, <span class="ing" data-ana="parfum">Parfum</span>, Sodium Chloride, Citric Acid, Panthenol, <span class="ing" data-ana="paraben">Methylparaben</span>, Polyquaternium-10, Tocopheryl Acetate, Sodium Benzoate, Disodium EDTA.</div>
+          </div>
+        </div>
+      </div>
+      <div class="scanline"></div>
+
+      <div class="pill pill-1" id="pill-1">
+        <span class="swatch"></span>
+        <span><strong>Sulfates</strong> <span class="ana">&mdash; like sugar. Fine sometimes, brutal daily.</span></span>
+      </div>
+      <div class="pill pill-2" id="pill-2">
+        <span class="swatch" style="background: var(--mist);"></span>
+        <span><strong>Parfum</strong> <span class="ana">&mdash; a mystery guest list.</span></span>
+      </div>
+      <div class="pill pill-3" id="pill-3">
+        <span class="swatch" style="background: var(--sage);"></span>
+        <span><strong>Parabens</strong> <span class="ana">&mdash; the houseguest who never leaves.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMPARISON ============ -->
+<section id="science" style="padding-top: 48px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">A different temperament</div>
+        <h2 class="reveal" data-delay="1">Other apps shout. We translate.</h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        The first wave of ingredient apps treated chemistry like a horror movie. Every label became a list of villains. We think that&rsquo;s a bad way to learn anything &mdash; and a worse way to take care of your skin.
+      </p>
+    </div>
+
+    <div class="compare reveal" data-delay="2">
+      <div class="compare-col lose">
+        <h4>Other ingredient apps</h4>
+        <div class="row">Slap a 1&ndash;10 score on every ingredient.</div>
+        <div class="row">Treat a 22-year-old with oily skin the same as a pregnant user.</div>
+        <div class="row bad-quote">&ldquo;Contains parabens, an endocrine disruptor.&rdquo;</div>
+        <div class="row">One AI prompt behind a paywall.</div>
+        <div class="row">Red flags. Skull icons. &ldquo;AVOID.&rdquo;</div>
+      </div>
+      <div class="compare-col win">
+        <h4>CleanLabel</h4>
+        <div class="row">Calibrated to dose, frequency, and your skin.</div>
+        <div class="row">Personalized to your profile and the goals you actually told us.</div>
+        <div class="row analogy">&ldquo;Parabens are like a houseguest who never leaves &mdash; fine for a weekend, problematic for a year.&rdquo;</div>
+        <div class="row">Five specialized agents, one coherent answer.</div>
+        <div class="row">Analogies. Doses. Receipts you can verify.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how" style="background: linear-gradient(180deg, var(--bg) 0%, #F4EEE2 100%);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">How it works</div>
+        <h2 class="reveal" data-delay="1">Three minutes in.<br>A coach for as long as you want.</h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        No quiz that pretends to be a personality test. No email-gated PDF. You give us a profile and a bathroom shelf; we give you a report you can actually use.
+      </p>
+    </div>
+
+    <div class="steps">
+      <div class="step reveal" data-delay="1">
+        <div class="num mono">01 &mdash; Onboarding</div>
+        <h3>Tell us about you.</h3>
+        <p>Three minutes. Age, skin type, the goals you actually care about &mdash; less acne, less oil, anti-aging, hydration, less sensitivity &mdash; and the products in your bathroom.</p>
+        <div class="extra">~ 3 min &middot; 8 questions</div>
+      </div>
+      <div class="step reveal" data-delay="2">
+        <div class="num mono">02 &mdash; Analysis</div>
+        <h3>Our agents do the chemistry.</h3>
+        <p>Five specialized AI agents read every ingredient, weigh it against your profile, and write the analogy. You watch them work in real time.</p>
+        <div class="extra">~ 45 sec &middot; 5 agents</div>
+      </div>
+      <div class="step reveal" data-delay="3">
+        <div class="num mono">03 &mdash; Report</div>
+        <h3>Get a coach, not a verdict.</h3>
+        <p>A personalized report. Analogies, not alarms. Safer alternatives where they matter. EU and California regulatory citations as the receipt &mdash; never the headline.</p>
+        <div class="extra">Yours, forever &middot; Updates as you shop</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ORCHESTRATOR ============ -->
+<section class="orch">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">The architecture</div>
+        <h2 class="reveal" data-delay="1">Most AI apps are one prompt.<br><em>We&rsquo;re five agents in a&nbsp;room.</em></h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        A single prompt can&rsquo;t hold &ldquo;sulfate&rdquo; and &ldquo;your scalp is dry&rdquo; and &ldquo;the EU restricts this leave-on&rdquo; in its head at the same time without losing one of them. So we don&rsquo;t ask it to.
+      </p>
+    </div>
+
+    <div class="orch-grid">
+      <div class="diagram reveal" aria-hidden="true">
+        <svg viewBox="0 0 520 520">
+          <defs>
+            <radialGradient id="hub" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#C97B5C" />
+              <stop offset="100%" stop-color="#A65E40" />
+            </radialGradient>
+            <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#B8D4D7" stop-opacity="0.15"/>
+              <stop offset="50%" stop-color="#B8D4D7" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#B8D4D7" stop-opacity="0.15"/>
+            </linearGradient>
+          </defs>
+
+          <!-- connection lines -->
+          <g stroke="#B8D4D7" stroke-opacity="0.25" stroke-width="1" fill="none">
+            <line x1="260" y1="260" x2="260" y2="80"/>
+            <line x1="260" y1="260" x2="430" y2="160"/>
+            <line x1="260" y1="260" x2="430" y2="360"/>
+            <line x1="260" y1="260" x2="90" y2="360"/>
+            <line x1="260" y1="260" x2="90" y2="160"/>
+          </g>
+
+          <!-- pulsing dots travelling -->
+          <g>
+            <circle r="3.5" fill="#B8D4D7">
+              <animateMotion dur="3.6s" repeatCount="indefinite" path="M 260 260 L 260 80"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="3.6s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="3.5" fill="#B8D4D7">
+              <animateMotion dur="4.2s" begin="0.6s" repeatCount="indefinite" path="M 260 260 L 430 160"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="4.2s" begin="0.6s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="3.5" fill="#B8D4D7">
+              <animateMotion dur="3.8s" begin="1.2s" repeatCount="indefinite" path="M 260 260 L 430 360"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="3.8s" begin="1.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="3.5" fill="#B8D4D7">
+              <animateMotion dur="4.4s" begin="1.8s" repeatCount="indefinite" path="M 260 260 L 90 360"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="4.4s" begin="1.8s" repeatCount="indefinite"/>
+            </circle>
+            <circle r="3.5" fill="#B8D4D7">
+              <animateMotion dur="4.0s" begin="2.4s" repeatCount="indefinite" path="M 260 260 L 90 160"/>
+              <animate attributeName="opacity" values="0;1;1;0" dur="4.0s" begin="2.4s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          <!-- agent nodes -->
+          <g>
+            <!-- Top: Scanner -->
+            <g transform="translate(260, 80)">
+              <circle r="44" fill="#1F3D3B" stroke="#B8D4D7" stroke-opacity="0.4"/>
+              <circle r="44" fill="none" stroke="#B8D4D7" stroke-opacity="0.6">
+                <animate attributeName="r" values="44;52;44" dur="3.2s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3.2s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="4" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">SCANNER</text>
+            </g>
+            <!-- right top: Profile Reasoner -->
+            <g transform="translate(430, 160)">
+              <circle r="44" fill="#1F3D3B" stroke="#B8D4D7" stroke-opacity="0.4"/>
+              <circle r="44" fill="none" stroke="#B8D4D7" stroke-opacity="0.6">
+                <animate attributeName="r" values="44;52;44" dur="3.6s" begin="0.4s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3.6s" begin="0.4s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-2" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">PROFILE</text>
+              <text text-anchor="middle" y="12" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">REASONER</text>
+            </g>
+            <!-- right bottom: Analogy Writer -->
+            <g transform="translate(430, 360)">
+              <circle r="44" fill="#1F3D3B" stroke="#B8D4D7" stroke-opacity="0.4"/>
+              <circle r="44" fill="none" stroke="#B8D4D7" stroke-opacity="0.6">
+                <animate attributeName="r" values="44;52;44" dur="3.4s" begin="0.8s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3.4s" begin="0.8s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-2" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">ANALOGY</text>
+              <text text-anchor="middle" y="12" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">WRITER</text>
+            </g>
+            <!-- left bottom: Alternative Finder -->
+            <g transform="translate(90, 360)">
+              <circle r="44" fill="#1F3D3B" stroke="#B8D4D7" stroke-opacity="0.4"/>
+              <circle r="44" fill="none" stroke="#B8D4D7" stroke-opacity="0.6">
+                <animate attributeName="r" values="44;52;44" dur="3.8s" begin="1.2s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3.8s" begin="1.2s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-2" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">ALT.</text>
+              <text text-anchor="middle" y="12" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">FINDER</text>
+            </g>
+            <!-- left top: Regulatory -->
+            <g transform="translate(90, 160)">
+              <circle r="44" fill="#1F3D3B" stroke="#B8D4D7" stroke-opacity="0.4"/>
+              <circle r="44" fill="none" stroke="#B8D4D7" stroke-opacity="0.6">
+                <animate attributeName="r" values="44;52;44" dur="3.5s" begin="1.6s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.6;0;0.6" dur="3.5s" begin="1.6s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-2" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">REG.</text>
+              <text text-anchor="middle" y="12" fill="#B8D4D7" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1">CROSS-REF</text>
+            </g>
+
+            <!-- Center: Orchestrator -->
+            <g transform="translate(260, 260)">
+              <circle r="64" fill="url(#hub)"/>
+              <circle r="64" fill="none" stroke="#C97B5C" stroke-opacity="0.4">
+                <animate attributeName="r" values="64;78;64" dur="2.8s" repeatCount="indefinite"/>
+                <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="2.8s" repeatCount="indefinite"/>
+              </circle>
+              <text text-anchor="middle" y="-2" fill="#FFFFFF" font-family="Instrument Serif, serif" font-style="italic" font-size="20">Orchestrator</text>
+              <text text-anchor="middle" y="16" fill="#FFFFFF" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="2" opacity="0.8">COMPOSING</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="orch-copy reveal" data-delay="2">
+        <p>The Orchestrator runs five small specialists in parallel and stitches the answer together. Each agent has one job, one prompt, and one source of truth &mdash; which is why the output stops contradicting itself and starts sounding like a single voice.</p>
+        <p>It also means we can add new specialists (a Pregnancy Reasoner, an Eczema Reasoner, a Cost Reasoner) without retraining or rewriting the rest.</p>
+
+        <ul class="agents-list">
+          <li><span class="name">Scanner</span><span>Reads each product&rsquo;s ingredient list and resolves common synonyms.</span></li>
+          <li><span class="name">Profile Reasoner</span><span>Filters chemicals by what matters for <em>this</em> user&rsquo;s skin and goals.</span></li>
+          <li><span class="name">Analogy Writer</span><span>Translates chemistry into everyday metaphors. Houseguests, sugar, marathons.</span></li>
+          <li><span class="name">Alternative Finder</span><span>Recommends safer swaps that match skin type, goals, and price band.</span></li>
+          <li><span class="name">Regulatory Cross-Ref</span><span>Surfaces EU, California, and Health Canada citations as a receipt &mdash; not the headline.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXAMPLE REPORTS ============ -->
+<section id="reports">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">Example reports</div>
+        <h2 class="reveal" data-delay="1">What an analysis looks like.</h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        Three real cards from real reports. The third one matters most: when a product is fine, we say it&rsquo;s fine. We are not in the business of inventing villains.
+      </p>
+    </div>
+
+    <div class="reports">
+      <article class="report reveal" data-delay="1">
+        <div class="top">
+          <div>
+            <div class="ingr">Sodium Lauryl Sulfate</div>
+            <div class="source">in your Daily Clarifying Shampoo</div>
+          </div>
+          <span class="chip">EU&nbsp;&gt;&nbsp;1%&nbsp;leave-on</span>
+        </div>
+        <div class="body">&ldquo;Sulfates are like sugar. Fine in moderation. Brutal twice a day for eight years &mdash; and they&rsquo;re working against the dryness goal you told us about.&rdquo;</div>
+        <div class="swap">
+          <span class="k">Suggested swap</span>
+          <span class="v">Vanicream Free &amp; Clear Shampoo</span>
+        </div>
+      </article>
+
+      <article class="report reveal" data-delay="2">
+        <div class="top">
+          <div>
+            <div class="ingr">Retinol</div>
+            <div class="source">in 3 of your products</div>
+          </div>
+          <span class="chip note">Stack alert</span>
+        </div>
+        <div class="body">&ldquo;Three retinol products is like training for a marathon every day. Pick one. Use it 3&times;/week. Let your barrier recover.&rdquo;</div>
+        <div class="swap">
+          <span class="k">Note</span>
+          <span class="v">Avoid entirely if pregnant or nursing.</span>
+        </div>
+      </article>
+
+      <article class="report reveal" data-delay="3">
+        <div class="top">
+          <div>
+            <div class="ingr">Niacinamide 5% Serum</div>
+            <div class="source">your evening serum</div>
+          </div>
+          <span class="chip clear">All clear</span>
+        </div>
+        <div class="body clean">&ldquo;This one&rsquo;s working with you, not against you. Niacinamide at 5% is a quiet workhorse for your hydration and oil-control goals.&rdquo;</div>
+        <div class="swap">
+          <span class="k">Verdict</span>
+          <span class="v">Keep it. Use morning <em>or</em> night.</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="report-foot mono reveal" data-delay="3">
+      <span>Anonymized from real reports</span>
+      <span>&middot;</span>
+      <span>Receipts attached to every claim</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PERSONAS ============ -->
+<section id="who" style="background: var(--bg);">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">Who this is for</div>
+        <h2 class="reveal" data-delay="1">Reluctant researchers, mostly.</h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        People who read ingredient labels grudgingly, don&rsquo;t trust skincare marketing, and don&rsquo;t have time to learn organic chemistry. They want someone to translate.
+      </p>
+    </div>
+
+    <div class="personas">
+      <article class="persona reveal" data-delay="1">
+        <div class="photo" data-tone="a" data-caption="Photo &mdash; Mira"></div>
+        <div class="quote">&ldquo;I tried four cleansers. None of them worked. Now I know why.&rdquo;</div>
+        <div class="who"><span class="mono">Mira &middot; 25 &middot; Hormonal acne</span></div>
+      </article>
+      <article class="persona reveal" data-delay="2">
+        <div class="photo" data-tone="b" data-caption="Photo &mdash; Jordan"></div>
+        <div class="quote">&ldquo;I was layering three retinol products. CleanLabel told me to stop &mdash; gently.&rdquo;</div>
+        <div class="who"><span class="mono">Jordan &middot; 41 &middot; Anti-aging</span></div>
+      </article>
+      <article class="persona reveal" data-delay="3">
+        <div class="photo" data-tone="c" data-caption="Photo &mdash; Priya"></div>
+        <div class="quote">&ldquo;My doctor handed me a list. CleanLabel reads it for me every time I shop.&rdquo;</div>
+        <div class="who"><span class="mono">Priya &middot; 32 &middot; Pregnant</span></div>
+      </article>
+      <article class="persona reveal" data-delay="4">
+        <div class="photo" data-tone="d" data-caption="Photo &mdash; Marco"></div>
+        <div class="quote">&ldquo;I never thought about skin until my dermatologist asked. Now I have answers.&rdquo;</div>
+        <div class="who"><span class="mono">Marco &middot; 28 &middot; First routine</span></div>
+      </article>
+    </div>
+
+    <p class="illust-note">Illustrative personas &middot; real customer stories at launch</p>
+  </div>
+</section>
+
+<!-- ============ RECEIPTS ============ -->
+<section style="padding-top: 80px; padding-bottom: 80px;">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="mono section-eyebrow reveal">The receipts</div>
+        <h2 class="reveal" data-delay="1">Sources you can verify.</h2>
+      </div>
+      <p class="lede reveal" data-delay="2">
+        We refuse to be the loudest voice in the room. Every claim ships with a citation; you can click into the regulatory text yourself.
+      </p>
+    </div>
+
+    <div class="receipts reveal">
+      <div class="receipt">
+        <div class="mono label">Open data</div>
+        <h4>Open Beauty Facts</h4>
+        <p>The 1.4M-product open ingredient database. Free, community-maintained, auditable. We pay back upstream.</p>
+      </div>
+      <div class="receipt">
+        <div class="mono label">Citations</div>
+        <h4>Three regulators, one chip</h4>
+        <p>EU CosIng, California Prop 65, and Health Canada Hotlist surface as a small receipt &mdash; never as the headline.</p>
+      </div>
+      <div class="receipt">
+        <div class="mono label">Methodology</div>
+        <h4>Calibrated, not vibes</h4>
+        <p>Peer-reviewed sources, dose-aware reasoning, no debunked &ldquo;2&nbsp;kg of chemicals/year&rdquo; myths.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" style="padding-top: 60px;">
+  <div class="wrap" style="max-width: 880px;">
+    <div class="section-head" style="grid-template-columns: 1fr;">
+      <div>
+        <div class="mono section-eyebrow reveal">Common questions</div>
+        <h2 class="reveal" data-delay="1">The honest answers.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q"><span>Is this medical advice?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">No. CleanLabel is a coach, not a clinician. A disclaimer ships with every analysis, and we tell you when to talk to a dermatologist instead of us.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Why aren&rsquo;t you just rating ingredients 1 to 10?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Because dose, frequency, and your goal matter, and a number can&rsquo;t carry that. A &ldquo;7&rdquo; that&rsquo;s fine for one person and harmful for another isn&rsquo;t telling you anything useful.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Where do you get product data?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Open Beauty Facts is the spine. An LLM resolver fills gaps when OBF doesn&rsquo;t have a SKU, and our agents always cite which source they used.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>What does it cost?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Free during the beta. Long-term we&rsquo;ll charge a small subscription for unlimited bathroom rescans. We&rsquo;ll never sell your data &mdash; that&rsquo;s a load-bearing promise.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Will it work for my skin condition?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Eczema, rosacea, sensitive skin &mdash; yes, those are central to how we reason. Diagnosed conditions &mdash; talk to a dermatologist. We&rsquo;re a coach, not a doctor.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>What about pregnancy and nursing?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Tell us during onboarding and the Profile Reasoner switches modes &mdash; retinoids, salicylic acid above 2%, and a handful of others get flagged automatically until you opt back out.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q"><span>Is my data private?</span><span class="plus">+</span></button>
+        <div class="faq-a"><div style="padding-top: 4px;">Your bathroom shelf, your goals, and your skin profile are yours. We don&rsquo;t sell to brands. We don&rsquo;t accept paid placements in suggested swaps. Export or delete anytime.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final">
+  <div class="wrap">
+    <h2 class="reveal">Stop reading labels.<br><em>Start understanding them.</em></h2>
+    <p class="reveal" data-delay="1">Three minutes of onboarding. A coach for as long as your bathroom keeps changing.</p>
+    <a href="#" class="btn btn-lg reveal" data-delay="2">Decode my bathroom &mdash; free <span class="arrow">&rarr;</span></a>
+    <div class="mono tiny reveal" data-delay="3">Email magic link &middot; 3 minutes &middot; No credit card</div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="wordmark" style="font-size: 28px;">CleanLabel<span class="dot"></span></div>
+        <p class="muted" style="margin-top: 14px; max-width: 32ch; font-size: 14px;">A chemistry friend, on call. Built for reluctant researchers.</p>
+      </div>
+      <div>
+        <h5>Product</h5>
+        <ul>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#reports">Example reports</a></li>
+          <li><a href="#science">The science</a></li>
+          <li><a href="#">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Methodology</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Legal</h5>
+        <ul>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Terms</a></li>
+          <li><a href="#">Data sources</a></li>
+          <li><a href="#">Disclaimer</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span class="built">&copy; 2026 CleanLabel &middot; Built on Open Beauty Facts</span>
+      <span class="built">v0.4.2 &middot; beta</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ===== Hero stagger =====
+  const h1 = document.getElementById('hero-h1');
+  if (h1) {
+    const lineA = h1.querySelector('.line-a');
+    const lineB = h1.querySelector('.line-b');
+
+    // wrap each word in a span
+    const wrapWords = (el) => {
+      const text = el.textContent;
+      el.textContent = '';
+      // Use innerHTML wrap to preserve <em>
+      const parts = text.split(/(\s+)/);
+      parts.forEach(p => {
+        if (/^\s+$/.test(p)) {
+          el.appendChild(document.createTextNode(p));
+        } else if (p.length) {
+          const s = document.createElement('span');
+          s.className = 'word';
+          s.textContent = p;
+          el.appendChild(s);
+        }
+      });
+    };
+
+    // line A: wrap into words
+    wrapWords(lineA);
+    // line B is the punchline — animate as a whole
+    const words = lineA.querySelectorAll('.word');
+
+    if (reduced) {
+      words.forEach(w => { w.style.opacity = 1; w.style.transform = 'none'; });
+      lineB.style.opacity = 1; lineB.style.transform = 'none';
+    } else {
+      words.forEach((w, i) => {
+        w.animate(
+          [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'translateY(0)' }],
+          { duration: 700, delay: 80 + i * 40, fill: 'forwards', easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+        );
+      });
+      const total = 80 + words.length * 40 + 200;
+      lineB.animate(
+        [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }],
+        { duration: 1000, delay: total, fill: 'forwards', easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+      );
+    }
+  }
+
+  // ===== Nav scroll state =====
+  const nav = document.getElementById('nav');
+  const onScroll = () => {
+    if (window.scrollY > 60) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  };
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ===== Reveal on scroll =====
+  const revealEls = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    revealEls.forEach(el => el.classList.add('in'));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => io.observe(el));
+  }
+
+  // ===== Scanning bottle: synchronize ingredient highlights with pills =====
+  const ings = document.querySelectorAll('#ingredients .ing');
+  const pills = {
+    sulfate: document.getElementById('pill-1'),
+    parfum:  document.getElementById('pill-2'),
+    paraben: document.getElementById('pill-3')
+  };
+
+  if (!reduced && ings.length) {
+    // 6s scan cycle. Sulfate (~22%->88%):
+    // top 22% over 0%, bottom 88% by 100%; relative ingredient positions ~ 28%, 53%, 70%.
+    // We'll trigger at approx fractions of 6000ms.
+    const cycle = 6000;
+    const schedule = [
+      { key: 'sulfate', show: 0.18, hide: 0.95 },
+      { key: 'parfum',  show: 0.40, hide: 0.95 },
+      { key: 'paraben', show: 0.62, hide: 0.95 }
+    ];
+
+    const ingByKey = {};
+    ings.forEach(el => { ingByKey[el.dataset.ana] = el; });
+
+    const tick = (start) => {
+      const now = performance.now();
+      const t = ((now - start) % cycle) / cycle;
+
+      schedule.forEach(s => {
+        const el = ingByKey[s.key];
+        const pill = pills[s.key];
+        const active = t >= s.show && t <= s.hide;
+        if (active) {
+          el && el.classList.add('hot');
+          pill && pill.classList.add('show');
+        } else {
+          el && el.classList.remove('hot');
+          pill && pill.classList.remove('show');
+        }
+      });
+
+      requestAnimationFrame(() => tick(start));
+    };
+
+    requestAnimationFrame((t) => tick(t));
+  }
+
+  // ===== FAQ accordion =====
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

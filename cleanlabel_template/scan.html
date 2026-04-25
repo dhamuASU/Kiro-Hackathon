@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scan a product · CleanLabel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Manrope:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#FBF7F1; --paper:#F4F2DF; --surface:#FFFFFF;
+    --sage:#B8D8BA; --sage-soft:#E4EFE3;
+    --teal:#7A6563; --mist:#FCDDBC; --mist-soft:#FCEAD3;
+    --terra:#CA2E55; --terra-deep:#A82446;
+    --ink:#3D2F2E; --muted:#7A6563; --hairline:#E8DFD2;
+    --serif:"Newsreader","Times New Roman",serif;
+    --sans:"Manrope",-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;font-weight:400}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input{font:inherit;color:inherit}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:500;letter-spacing:-0.015em;line-height:1.05;margin:0}
+  .mono{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;font-weight:500}
+
+  .nav{position:sticky;top:0;z-index:50;background:rgba(251,247,241,0.88);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--hairline)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1240px;margin:0 auto;padding:0 32px}
+  .wordmark{font-family:var(--serif);font-style:italic;font-size:24px;font-weight:500}
+  .wordmark .dot{display:inline-block;width:6px;height:6px;background:var(--terra);border-radius:50%;margin:0 0 5px 2px;vertical-align:middle}
+  .nav-links{display:flex;gap:32px}
+  .nav-links a{font-size:14px;color:var(--ink);position:relative;padding:4px 0}
+  .nav-links a.active{color:var(--teal);font-weight:500}
+  .nav-cta{display:flex;align-items:center;gap:22px}
+  .nav-cta .signin{font-size:14px;color:var(--muted)}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--terra);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:500;transition:background 150ms}
+  .btn:hover{background:var(--terra-deep)}
+  .btn-lg{padding:14px 22px;font-size:15px}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--hairline)}
+  .btn-ghost:hover{background:var(--paper);border-color:var(--ink)}
+  @media (max-width:880px){.nav-links{display:none}}
+
+  .page{max-width:1240px;margin:0 auto;padding:48px 32px 96px}
+  .page-head{margin-bottom:32px;text-align:center;max-width:680px;margin-left:auto;margin-right:auto}
+  .eyebrow{color:var(--sage);margin-bottom:14px;display:inline-flex;align-items:center;gap:10px;justify-content:center}
+  .eyebrow::before,.eyebrow::after{content:"";width:24px;height:1px;background:var(--sage)}
+  .page-head h1{font-size:clamp(40px,5vw,60px)}
+  .page-head h1 em{font-style:italic;color:var(--teal)}
+  .page-head .lede{color:var(--muted);font-size:17px;max-width:48ch;margin:18px auto 0}
+
+  /* CENTERED MODE TABS */
+  .modes{display:flex;justify-content:center;margin:40px 0 28px}
+  .modes-inner{display:inline-flex;gap:4px;padding:5px;background:var(--paper);border:1px solid var(--hairline);border-radius:999px}
+  .mode-btn{padding:10px 20px;font-size:13px;font-weight:500;border-radius:999px;color:var(--muted);transition:all 200ms;display:inline-flex;align-items:center;gap:8px}
+  .mode-btn svg{width:14px;height:14px}
+  .mode-btn:hover{color:var(--ink)}
+  .mode-btn.active{background:var(--ink);color:#fff}
+
+  /* GRID: capture | report */
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:36px;align-items:start}
+  @media (max-width:1024px){.grid{grid-template-columns:1fr;gap:28px}}
+
+  /* CAMERA viewport */
+  .viewport{position:relative;background:#1A2322;border-radius:10px;overflow:hidden;aspect-ratio:4/5;box-shadow:0 28px 60px -24px rgba(34,39,42,0.35);display:none}
+  .viewport.show{display:block}
+  .feed{position:absolute;inset:0;background:
+    radial-gradient(ellipse at 50% 30%, rgba(255,250,238,0.16), transparent 55%),
+    radial-gradient(ellipse at 25% 80%, rgba(207,221,220,0.14), transparent 55%),
+    linear-gradient(180deg, #1F2A28 0%, #121A19 100%);
+  }
+  /* shelf depth lines */
+  .feed::before{content:"";position:absolute;left:8%;right:8%;top:62%;height:1px;background:rgba(255,255,255,0.08);box-shadow:0 22px 0 rgba(255,255,255,0.05)}
+
+  /* BARCODE TARGET on the floor of viewport */
+  .barcode{
+    position:absolute;left:50%;bottom:18%;transform:translateX(-50%);
+    width:62%;padding:14px 16px;background:#FFFFFF;border-radius:6px;
+    box-shadow:0 8px 28px rgba(0,0,0,0.35);
+    transition:transform 320ms var(--ease), box-shadow 320ms var(--ease);
+  }
+  .barcode .bars{display:flex;align-items:flex-end;gap:2px;height:46px}
+  .barcode .bars span{display:block;width:2px;background:#1A2322;height:100%}
+  .barcode .bars span.tall{height:100%}
+  .barcode .bars span.short{height:74%}
+  .barcode .bars span.med{height:88%}
+  .barcode .bars span.thin{width:1px}
+  .barcode .bars span.fat{width:3px}
+  .barcode .num{font-family:var(--mono);font-size:11px;letter-spacing:0.18em;color:#1A2322;text-align:center;margin-top:6px}
+
+  /* viewfinder corners */
+  .corners{position:absolute;inset:14%;pointer-events:none}
+  .corners span{position:absolute;width:26px;height:26px;border:2px solid rgba(251,249,244,0.85)}
+  .corners span:nth-child(1){top:0;left:0;border-right:none;border-bottom:none;border-radius:5px 0 0 0}
+  .corners span:nth-child(2){top:0;right:0;border-left:none;border-bottom:none;border-radius:0 5px 0 0}
+  .corners span:nth-child(3){bottom:0;left:0;border-right:none;border-top:none;border-radius:0 0 0 5px}
+  .corners span:nth-child(4){bottom:0;right:0;border-left:none;border-top:none;border-radius:0 0 5px 0}
+
+  .vp-scan{position:absolute;left:14%;right:14%;height:2px;background:linear-gradient(90deg,transparent,rgba(207,221,220,0.95),transparent);box-shadow:0 0 18px 4px rgba(207,221,220,0.4);top:14%;animation:vpScan 3.4s linear infinite}
+  @keyframes vpScan{0%{top:14%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:86%;opacity:0}}
+
+  .vp-top{position:absolute;left:0;right:0;top:0;padding:14px 18px;display:flex;justify-content:space-between;color:#FBF9F4;background:linear-gradient(180deg,rgba(0,0,0,0.4),transparent);align-items:center}
+  .vp-top .label{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase}
+  .vp-top .label .pulse{display:inline-block;width:7px;height:7px;background:#A9C8AB;border-radius:50%;margin-right:8px;vertical-align:1px;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:0.4;transform:scale(0.85)}50%{opacity:1;transform:scale(1.15)}}
+  .vp-tools{display:flex;gap:8px}
+  .tool-btn{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:#FBF9F4;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background 150ms}
+  .tool-btn:hover{background:rgba(255,255,255,0.18)}
+  .tool-btn svg{width:15px;height:15px}
+
+  .shutter-wrap{position:absolute;left:0;right:0;bottom:5%;display:flex;justify-content:center;align-items:center;gap:32px}
+  .shutter{width:72px;height:72px;border-radius:50%;background:transparent;border:3px solid #FBF9F4;display:flex;align-items:center;justify-content:center;transition:transform 180ms var(--ease)}
+  .shutter:hover{transform:scale(1.05)}
+  .shutter:active{transform:scale(0.93)}
+  .shutter::after{content:"";width:54px;height:54px;border-radius:50%;background:#FFFFFF;transition:background 200ms}
+  .shutter.pressing::after{background:var(--terra)}
+
+  /* Falling bottle */
+  .falling-bottle{
+    position:absolute;left:50%;top:-30%;width:96px;
+    transform:translateX(-50%) rotate(-6deg);
+    opacity:0;
+    pointer-events:none;
+    filter:drop-shadow(0 12px 18px rgba(0,0,0,0.35));
+  }
+  .falling-bottle img{width:100%;height:auto;display:block}
+  .falling-bottle.drop{animation:dropIn 1.05s cubic-bezier(.45,.05,.55,.95) forwards}
+  @keyframes dropIn{
+    0%   {top:-30%; opacity:0; transform:translateX(-50%) rotate(-6deg)}
+    20%  {opacity:1}
+    78%  {top:38%; transform:translateX(-50%) rotate(2deg)}
+    88%  {top:42%; transform:translateX(-50%) rotate(-1deg)}
+    100% {top:42%; transform:translateX(-50%) rotate(0deg); opacity:1}
+  }
+  .barcode.hit{animation:barcodeHit 0.5s ease-out 1.0s}
+  @keyframes barcodeHit{
+    0%{transform:translateX(-50%) scale(1)}
+    35%{transform:translateX(-50%) scale(0.94) translateY(4px);box-shadow:0 4px 12px rgba(0,0,0,0.35)}
+    100%{transform:translateX(-50%) scale(1)}
+  }
+
+  /* Decoded ingredient overlay */
+  .ing-overlay{
+    position:absolute;left:8%;right:8%;top:8%;
+    background:rgba(251,249,244,0.96);border-radius:8px;
+    padding:18px 18px 16px;backdrop-filter:blur(8px);
+    opacity:0;transform:translateY(-8px);
+    transition:opacity 400ms var(--ease),transform 400ms var(--ease);
+    pointer-events:none;
+  }
+  .ing-overlay.show{opacity:1;transform:translateY(0)}
+  .ing-overlay .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .ing-overlay .ttl{font-family:var(--serif);font-size:18px;line-height:1.15;color:var(--ink)}
+  .ing-overlay .br{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .ing-overlay .badge{font-family:var(--mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 8px;border-radius:3px;background:var(--mist-soft);color:var(--terra-deep);white-space:nowrap}
+  .ing-overlay .list{display:grid;gap:5px;margin-top:8px}
+  .ing-overlay .item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;font-family:var(--mono);font-size:10.5px;color:var(--ink);opacity:0;transform:translateY(4px);transition:opacity 280ms var(--ease),transform 280ms var(--ease)}
+  .ing-overlay .item .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .ing-overlay .item.in{opacity:1;transform:translateY(0)}
+  .ing-overlay .item .tag{font-size:8.5px;letter-spacing:0.06em;padding:2px 6px;border-radius:2px;background:var(--mist-soft);color:var(--teal);white-space:nowrap}
+  .ing-overlay .item .tag.warn{background:var(--mist-soft);color:var(--terra-deep)}
+  .ing-overlay .item .tag.ok{background:var(--sage-soft);color:var(--sage)}
+
+  /* SEARCH pane (centered) */
+  .search-pane{display:none;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;padding:24px}
+  .search-pane.show{display:block}
+  .search-bar{position:relative;background:var(--surface);border:1px solid var(--hairline);border-radius:8px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 16px;margin-bottom:16px;transition:border-color 150ms}
+  .search-bar:focus-within{border-color:var(--sage);box-shadow:0 0 0 3px rgba(138,166,140,0.15)}
+  .search-bar svg{width:18px;height:18px;color:var(--muted)}
+  .search-bar input{flex:1;border:none;background:transparent;outline:none;font-size:16px;padding:4px 0}
+  .search-bar input::placeholder{color:var(--muted)}
+  .search-bar .kbd{font-family:var(--mono);font-size:10px;color:var(--muted);padding:3px 7px;border:1px solid var(--hairline);border-radius:3px}
+
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .filter{padding:7px 13px;border-radius:999px;border:1px solid var(--hairline);font-size:12.5px;color:var(--muted);background:var(--surface);transition:all 180ms;white-space:nowrap}
+  .filter:hover{color:var(--ink)}
+  .filter.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .results-list{display:grid;gap:10px;max-height:520px;overflow-y:auto;padding-right:4px}
+  .result{display:grid;grid-template-columns:60px 1fr auto;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--hairline);border-radius:8px;transition:all 200ms var(--ease);cursor:pointer}
+  .result:hover{transform:translateY(-2px);border-color:var(--muted)}
+  .result.selected{border-color:var(--terra);background:#FFF7F0;box-shadow:0 0 0 3px rgba(202,46,85,0.10)}
+  .result-img{width:60px;height:60px;border-radius:6px;background:var(--bg);overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid var(--hairline)}
+  .result-img img{width:100%;height:100%;object-fit:cover;object-position:center}
+  .result-meta .brand{color:var(--muted);font-size:13px}
+  .result-meta .name{font-size:15px;font-weight:500;line-height:1.2;margin-top:1px}
+  .result-meta .ings{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:5px}
+  .result-flag{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:5px 9px;border-radius:3px;white-space:nowrap}
+  .result-flag.warn{background:var(--mist-soft);color:var(--terra-deep)}
+  .result-flag.ok{background:var(--sage-soft);color:var(--sage)}
+  .result-flag.note{background:var(--mist-soft);color:var(--teal)}
+
+  /* UPLOAD pane */
+  .upload-pane{display:none}
+  .upload-pane.show{display:block}
+  .dropzone{border:2px dashed var(--hairline);border-radius:10px;padding:64px 24px;text-align:center;background:var(--paper);transition:border-color 200ms,background 200ms}
+  .dropzone:hover{border-color:var(--sage);background:#F8F6E8}
+  .dropzone .icn{width:72px;height:72px;border-radius:50%;background:var(--sage-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--sage)}
+  .dropzone .icn svg{width:30px;height:30px}
+  .dropzone h3{font-size:26px;margin-bottom:6px}
+  .dropzone p{color:var(--muted);font-size:14.5px;max-width:36ch;margin:0 auto 22px}
+
+  /* REPORT */
+  .report-panel{background:var(--paper);border:1px solid var(--hairline);border-radius:10px;padding:28px;position:sticky;top:88px;min-height:520px}
+  .report-empty{text-align:center;padding:24px 8px}
+  .report-empty .ico{width:84px;height:84px;border-radius:50%;background:var(--sage-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--sage)}
+  .report-empty .ico svg{width:36px;height:36px}
+  .report-empty h3{font-size:26px;margin-bottom:8px}
+  .report-empty p{color:var(--muted);font-size:14.5px;max-width:34ch;margin:0 auto 22px;line-height:1.5}
+  .empty-tips{text-align:left;padding:18px;background:var(--surface);border:1px solid var(--hairline);border-radius:8px;display:grid;gap:12px;font-size:13.5px}
+  .empty-tips h4{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .empty-tips ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .empty-tips li{display:grid;grid-template-columns:18px 1fr;gap:10px;color:var(--muted)}
+  .empty-tips li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sage);margin-top:8px}
+
+  .report-filled{display:none}
+  .report-filled.show{display:block}
+  .report-head{display:grid;grid-template-columns:84px 1fr auto;gap:18px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid var(--hairline);margin-bottom:22px}
+  .report-head .photo{width:84px;height:84px;border-radius:8px;background:var(--surface);overflow:hidden;border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center}
+  .report-head .photo img{width:100%;height:100%;object-fit:cover}
+  .report-head .label{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+  .report-head h2{font-size:26px;line-height:1.15;margin-bottom:4px;font-weight:500}
+  .report-head .brand{color:var(--muted);font-size:14px}
+
+  .verdict{background:var(--surface);border-radius:8px;padding:20px 22px;margin-bottom:22px;border-left:3px solid var(--terra)}
+  .verdict.ok{border-left-color:var(--sage)}
+  .verdict .ana{font-family:var(--serif);font-style:italic;color:var(--teal);font-size:22px;line-height:1.32;margin-bottom:14px;display:block;font-weight:400}
+  .verdict .reason{color:var(--muted);font-size:14px;line-height:1.5}
+
+  .ingredient-list{margin-bottom:22px}
+  .ingredient-list h4{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .ing-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 0;border-bottom:1px solid var(--hairline);align-items:center}
+  .ing-row:last-child{border-bottom:none}
+  .ing-row .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+  .ing-row .nm.flagged{color:var(--terra-deep)}
+  .ing-row .tag{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 7px;border-radius:3px}
+  .tag.bg-warn{background:var(--mist-soft);color:var(--terra-deep)}
+  .tag.bg-ok{background:var(--sage-soft);color:var(--sage)}
+  .tag.bg-note{background:var(--mist-soft);color:var(--teal)}
+
+  .receipts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .receipt-chip{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:5px 10px;border-radius:3px;background:var(--mist-soft);color:var(--teal)}
+
+  .swap{background:var(--sage-soft);border-radius:8px;padding:18px 20px;margin-bottom:18px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center}
+  .swap .k{font-family:var(--mono);font-size:10px;letter-spacing:0.06em;color:var(--sage);text-transform:uppercase;margin-bottom:4px}
+  .swap .nm{font-size:15px;font-weight:500}
+  .swap .why{color:var(--muted);font-size:13px;margin-top:2px}
+  .swap-arr{color:var(--sage);transition:transform 200ms var(--ease)}
+  .swap:hover .swap-arr{transform:translateX(3px)}
+
+  .report-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  /* recents */
+  .recents{margin-top:48px;border-top:1px solid var(--hairline);padding-top:32px}
+  .recents h3{font-family:var(--serif);font-size:24px;margin-bottom:18px;font-weight:500}
+  .recents-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:880px){.recents-grid{grid-template-columns:repeat(2,1fr)}}
+  .recent{background:var(--paper);border:1px solid var(--hairline);border-radius:8px;padding:0;transition:all 200ms var(--ease);cursor:pointer;overflow:hidden}
+  .recent:hover{transform:translateY(-3px);box-shadow:0 16px 28px -16px rgba(34,39,42,0.15)}
+  .recent .ph{aspect-ratio:1/1;background:var(--bg);overflow:hidden;border-bottom:1px solid var(--hairline)}
+  .recent .ph img{width:100%;height:100%;object-fit:cover}
+  .recent .body{padding:14px 16px 16px}
+  .recent .when{font-family:var(--mono);font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .recent .nm{font-size:14px;font-weight:500;line-height:1.2}
+  .recent .br{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+  .recent .verdict-mini{font-family:var(--serif);font-style:italic;color:var(--teal);font-size:14px;line-height:1.3}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="CleanLabel.html" class="wordmark">CleanLabel<span class="dot"></span></a>
+    <nav class="nav-links">
+      <a href="CleanLabel.html#how">How it works</a>
+      <a href="routine.html">Routine builder</a>
+      <a href="scan.html" class="active">Scan</a>
+      <a href="CleanLabel.html#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#" class="signin">Sign in</a>
+      <a href="#" class="btn">Start free</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-head">
+    <div class="mono eyebrow">One product at a time</div>
+    <h1>Scan a bottle. <em>Get the analogy.</em></h1>
+    <p class="lede">Point the camera at any product. We'll cross-check Open Beauty Facts and write a one-paragraph coach's note &mdash; like a friend with a chemistry degree.</p>
+  </div>
+
+  <!-- Centered mode tabs -->
+  <div class="modes">
+    <div class="modes-inner" role="tablist">
+      <button class="mode-btn active" data-mode="camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7V5a2 2 0 0 1 2-2h2M21 7V5a2 2 0 0 0-2-2h-2M3 17v2a2 2 0 0 0 2 2h2M21 17v2a2 2 0 0 1-2 2h-2"/><circle cx="12" cy="12" r="3.5"/></svg>Camera</button>
+      <button class="mode-btn" data-mode="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search</button>
+      <button class="mode-btn" data-mode="upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>Upload</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Capture pane -->
+    <div>
+      <!-- CAMERA -->
+      <div class="viewport show" id="vp-camera">
+        <div class="feed"></div>
+        <div class="vp-scan"></div>
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+
+        <!-- the falling bottle (image swapped by JS) -->
+        <div class="falling-bottle" id="falling">
+          <img id="falling-img" alt="" src="https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&q=80" />
+        </div>
+
+        <!-- the barcode at the bottom -->
+        <div class="barcode" id="barcode">
+          <div class="bars" id="bars"></div>
+          <div class="num">3&nbsp;&nbsp;0&nbsp;6&nbsp;0&nbsp;1&nbsp;5&nbsp;&nbsp;3&nbsp;0&nbsp;7&nbsp;9&nbsp;3&nbsp;1</div>
+        </div>
+
+        <div class="vp-top">
+          <div class="label"><span class="pulse"></span>Looking for a barcode</div>
+          <div class="vp-tools">
+            <button class="tool-btn" id="t-flash" aria-label="Flash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg></button>
+            <button class="tool-btn" id="t-flip" aria-label="Flip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h13a4 4 0 0 1 4 4M21 17H8a4 4 0 0 1-4-4"/><path d="m6 4-3 3 3 3M18 14l3 3-3 3"/></svg></button>
+          </div>
+        </div>
+
+        <!-- decoded ingredient overlay (after capture) -->
+        <div class="ing-overlay" id="overlay">
+          <div class="top-row">
+            <div>
+              <div class="ttl" id="ov-name">Foaming Facial Cleanser</div>
+              <div class="br" id="ov-brand">Ceramide Cleanse Co. &middot; 355ml</div>
+            </div>
+            <span class="badge" id="ov-badge">Decoded</span>
+          </div>
+          <div class="list" id="ov-list"></div>
+        </div>
+
+        <div class="shutter-wrap">
+          <button class="shutter" id="capture" aria-label="Capture"></button>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="search-pane" id="vp-search">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" id="search-input" placeholder="Try ceramide, retinol, sulfate, vitamin C&hellip;" autocomplete="off" />
+          <span class="kbd">/</span>
+        </div>
+        <div class="filters" id="filters">
+          <button class="filter on" data-f="all">All</button>
+          <button class="filter" data-f="face">Face</button>
+          <button class="filter" data-f="hair">Hair</button>
+          <button class="filter" data-f="body">Body</button>
+          <button class="filter" data-f="spf">SPF</button>
+        </div>
+        <div class="results-list" id="results-list"></div>
+      </div>
+
+      <!-- UPLOAD -->
+      <div class="upload-pane" id="vp-upload">
+        <div class="dropzone">
+          <div class="icn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg></div>
+          <h3>Drop a label photo</h3>
+          <p>PNG or JPEG of a clear ingredient list works best. We'll OCR it and run the analysis.</p>
+          <button class="btn">Choose a file</button>
+          <div class="mono" style="margin-top:18px;color:var(--muted)">PNG, JPG, HEIC &middot; up to 8&nbsp;MB</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="report-panel">
+      <div class="report-empty" id="report-empty">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 11h6M9 15h4"/><rect x="5" y="3" width="14" height="18" rx="2"/></svg></div>
+        <h3>Waiting on a product.</h3>
+        <p>Tap the shutter to drop a bottle onto the barcode. Or switch to Search.</p>
+        <div class="empty-tips">
+          <h4>What you'll get</h4>
+          <ul>
+            <li>One paragraph &mdash; the analogy, in plain English.</li>
+            <li>Ingredient breakdown with a tag on each line.</li>
+            <li>Regulatory citations as a small receipt, never as the headline.</li>
+            <li>A safer swap, only if there's actually a better option.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="report-filled" id="report-filled">
+        <div class="report-head">
+          <div class="photo"><img id="rf-img" alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E" /></div>
+          <div>
+            <div class="label" id="rf-label"></div>
+            <h2 id="rf-name"></h2>
+            <div class="brand" id="rf-brand"></div>
+          </div>
+          <span class="result-flag" id="rf-flag"></span>
+        </div>
+
+        <div class="verdict" id="rf-verdict">
+          <div class="ana" id="rf-ana"></div>
+          <div class="reason" id="rf-reason"></div>
+        </div>
+
+        <div class="ingredient-list">
+          <h4>Ingredients we noticed</h4>
+          <div id="rf-ings"></div>
+        </div>
+
+        <div class="receipts" id="rf-receipts"></div>
+
+        <div class="swap" id="rf-swap">
+          <div>
+            <div class="k">Suggested swap</div>
+            <div class="nm" id="rf-swap-nm"></div>
+            <div class="why" id="rf-swap-why"></div>
+          </div>
+          <div class="swap-arr">&rarr;</div>
+        </div>
+
+        <div class="report-actions">
+          <button class="btn btn-ghost" id="add-to-routine">Add to routine</button>
+          <button class="btn">Save report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recents -->
+  <section class="recents">
+    <h3>Recently scanned</h3>
+    <div class="recents-grid">
+      <article class="recent" data-recent="cef">
+        <div class="ph"><img alt="Vitamin C serum bottle" src="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&q=80" /></div>
+        <div class="body">
+          <div class="when">Today &middot; 9:42</div>
+          <div class="nm">Vitamin C Serum</div>
+          <div class="br">Antioxidant Co.</div>
+          <div class="verdict-mini">&ldquo;Quiet workhorse. Working with you.&rdquo;</div>
+        </div>
+      </article>
+      <article class="recent" data-recent="ret">
+        <div class="ph"><img alt="Retinol cream jar" src="https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&q=80" /></div>
+        <div class="body">
+          <div class="when">Yesterday</div>
+          <div class="nm">Retinol Cream</div>
+          <div class="br">Nightly Renew</div>
+          <div class="verdict-mini">&ldquo;Strong. Three at once is a marathon.&rdquo;</div>
+        </div>
+      </article>
+      <article class="recent" data-recent="van">
+        <div class="ph"><img alt="Moisturizer tub" src="https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600&q=80" /></div>
+        <div class="body">
+          <div class="when">Apr 21</div>
+          <div class="nm">Daily Moisturizer</div>
+          <div class="br">Plain Goods</div>
+          <div class="verdict-mini">&ldquo;Boring in the best possible way.&rdquo;</div>
+        </div>
+      </article>
+      <article class="recent" data-recent="spf">
+        <div class="ph"><img alt="Sunscreen tube" src="https://images.unsplash.com/photo-1556228852-80b6e5eeff06?w=600&q=80" /></div>
+        <div class="body">
+          <div class="when">Apr 19</div>
+          <div class="nm">Mineral SPF 46</div>
+          <div class="br">Daylight Labs</div>
+          <div class="verdict-mini">&ldquo;Mineral-leaning. Gentle on rosacea.&rdquo;</div>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  // Catalog with real-looking product photos (Unsplash, generic packaging)
+  const CATALOG = [
+    {
+      id:'cera', cat:'face', flag:'ok', flagLabel:'All clear',
+      img:'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&q=80',
+      label:'Ceramide 1, 3, 6-II',
+      name:'Foaming Facial Cleanser', brand:'Ceramide Cleanse Co. &middot; 355ml',
+      ana:'&ldquo;Ceramides plus non-stripping surfactants. The kind of cleanser that just does its job and leaves.&rdquo;',
+      reason:'Calibrated for: sensitivity, oily-but-dehydrated skin.',
+      ings:[
+        ['Aqua / Water','Solvent','ok'],
+        ['Cocamidopropyl Hydroxysultaine','Surfactant','note'],
+        ['Glycerin','Humectant','ok'],
+        ['Ceramide NP','Barrier','ok'],
+        ['Niacinamide','Anti-inflammatory','ok'],
+        ['Hyaluronic Acid','Hydration','ok']
+      ],
+      receipts:['EU CosIng','Fragrance-free','Open Beauty Facts'],
+      swap:{name:'Keep this one', why:'Quietly excellent. Don&rsquo;t fix what isn&rsquo;t broken.'},
+      ingsPreview:'Ceramide NP, Niacinamide, Hyaluronic Acid&hellip;'
+    },
+    {
+      id:'hns', cat:'hair', flag:'warn', flagLabel:'Worth a chat',
+      img:'https://images.unsplash.com/photo-1626808642875-0aa545482dfb?w=600&q=80',
+      label:'Sodium Lauryl Sulfate',
+      name:'Daily Clarifying Shampoo', brand:'Field & Co. &middot; 250ml',
+      ana:'&ldquo;Sulfates are like sugar. Fine in moderation. Brutal twice a day for eight years &mdash; and they&rsquo;re working against the dryness goal you told us about.&rdquo;',
+      reason:'Calibrated for: scalp dryness goal &middot; daily frequency &middot; leave-on ~5 min.',
+      ings:[
+        ['Aqua / Water','Solvent','ok'],
+        ['Sodium Lauryl Sulfate','Sulfate','warn'],
+        ['Cocamidopropyl Betaine','Co-surfactant','note'],
+        ['Methylparaben','Preservative','warn'],
+        ['Glycerin','Humectant','ok'],
+        ['Panthenol','Conditioning','ok']
+      ],
+      receipts:['EU CosIng','Prop 65 &mdash; n/a','Open Beauty Facts'],
+      swap:{name:'A sulfate-free clarifier', why:'Same lather. No fight with your scalp.'},
+      ingsPreview:'Aqua, Sodium Lauryl Sulfate, Glycerin&hellip;'
+    },
+    {
+      id:'cef', cat:'face', flag:'ok', flagLabel:'All clear',
+      img:'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&q=80',
+      label:'Vitamin C 15% / E / Ferulic',
+      name:'Vitamin C Serum', brand:'Antioxidant Co. &middot; 30ml',
+      ana:'&ldquo;Quiet workhorse. Working with you on the brightening goal &mdash; not against your barrier.&rdquo;',
+      reason:'Calibrated for: AM use &middot; once daily &middot; under SPF.',
+      ings:[
+        ['L-Ascorbic Acid 15%','Antioxidant','ok'],
+        ['Tocopherol','Vit. E','ok'],
+        ['Ferulic Acid','Stabilizer','ok'],
+        ['Propylene Glycol','Solvent','note']
+      ],
+      receipts:['EU CosIng','Open Beauty Facts'],
+      swap:{name:'Keep this one', why:'Hard to beat at this concentration.'},
+      ingsPreview:'L-Ascorbic Acid, Tocopherol, Ferulic&hellip;'
+    },
+    {
+      id:'ret', cat:'face', flag:'warn', flagLabel:'Stack alert',
+      img:'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=600&q=80',
+      label:'Retinol 0.5%',
+      name:'Retinol Cream', brand:'Nightly Renew &middot; 30ml',
+      ana:'&ldquo;Three retinol products is like training for a marathon every day. Pick one. Use it 3&times;/week. Let your barrier recover.&rdquo;',
+      reason:'You already have two retinol products in your routine. Avoid entirely if pregnant or nursing.',
+      ings:[
+        ['Retinol','Retinoid','warn'],
+        ['Bakuchiol','Retinol-alt','note'],
+        ['Squalane','Emollient','ok'],
+        ['Tocopherol','Vit. E','ok']
+      ],
+      receipts:['EU CosIng','Pregnancy: avoid'],
+      swap:{name:'Use this one alone', why:'Drop the other two retinols. Same goal, less marathon.'},
+      ingsPreview:'Retinol, Bakuchiol, Squalane&hellip;'
+    },
+    {
+      id:'van', cat:'face', flag:'ok', flagLabel:'All clear',
+      img:'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600&q=80',
+      label:'Daily Moisturizer',
+      name:'Daily Facial Moisturizer', brand:'Plain Goods &middot; 56g',
+      ana:'&ldquo;All clear. Boring in the best possible way &mdash; nothing here will pick a fight with your skin.&rdquo;',
+      reason:'Calibrated for: sensitivity goal &middot; AM/PM use.',
+      ings:[
+        ['Glycerin','Humectant','ok'],
+        ['Petrolatum','Occlusive','ok'],
+        ['Ceramide NP','Barrier','ok'],
+        ['Hyaluronic Acid','Hydration','ok']
+      ],
+      receipts:['EU CosIng','Fragrance-free'],
+      swap:{name:'Keep this one', why:'Foundational. Don&rsquo;t fix what isn&rsquo;t broken.'},
+      ingsPreview:'Glycerin, Petrolatum, Ceramide NP&hellip;'
+    },
+    {
+      id:'spf', cat:'spf', flag:'ok', flagLabel:'All clear',
+      img:'https://images.unsplash.com/photo-1556228852-80b6e5eeff06?w=600&q=80',
+      label:'Zinc Oxide 9%',
+      name:'Mineral SPF 46', brand:'Daylight Labs &middot; 48g',
+      ana:'&ldquo;Mineral-leaning, niacinamide along for the ride. Gentle on rosacea, friendly on your hydration goal.&rdquo;',
+      reason:'Calibrated for: sensitivity &middot; daily AM use.',
+      ings:[
+        ['Zinc Oxide','Mineral SPF','ok'],
+        ['Octinoxate','Chemical SPF','note'],
+        ['Niacinamide','Anti-inflammatory','ok'],
+        ['Hyaluronic Acid','Hydration','ok']
+      ],
+      receipts:['Hawaii: avoid','Open Beauty Facts'],
+      swap:{name:'Or try a fully mineral SPF 50', why:'Slightly thicker. No octinoxate.'},
+      ingsPreview:'Zinc Oxide, Octinoxate, Niacinamide&hellip;'
+    },
+    {
+      id:'cond', cat:'hair', flag:'note', flagLabel:'Mostly fine',
+      img:'https://images.unsplash.com/photo-1610465299993-e6675c9f9efa?w=600&q=80',
+      label:'Curl & Shine Conditioner',
+      name:'Coconut Curl Conditioner', brand:'Botanic Hair Co. &middot; 384ml',
+      ana:'&ldquo;Lush, slip-y, friendly to curls. Has a small amount of fragrance &mdash; a non-issue for most, a thing if your scalp flares.&rdquo;',
+      reason:'Calibrated for: curl pattern &middot; weekly to daily use.',
+      ings:[
+        ['Aqua / Water','Solvent','ok'],
+        ['Cetearyl Alcohol','Emollient','ok'],
+        ['Behentrimonium Methosulfate','Conditioner','note'],
+        ['Coconut Oil','Emollient','ok'],
+        ['Fragrance','Scent','note']
+      ],
+      receipts:['EU CosIng','Open Beauty Facts'],
+      swap:{name:'Same line, fragrance-free', why:'Identical performance, less to argue with.'},
+      ingsPreview:'Aqua, Cetearyl Alcohol, Coconut Oil&hellip;'
+    },
+    {
+      id:'body', cat:'body', flag:'note', flagLabel:'Mostly fine',
+      img:'https://images.unsplash.com/photo-1601612628452-9e99ced43524?w=600&q=80',
+      label:'Colloidal Oatmeal 1%',
+      name:'Daily Body Lotion', brand:'Oat & Cream &middot; 354ml',
+      ana:'&ldquo;Solid daily lotion. Has a little fragrance &mdash; a small thing for most, a big thing if you&rsquo;re in the eczema flare-up camp.&rdquo;',
+      reason:'Calibrated for: hydration goal &middot; whole-body application.',
+      ings:[
+        ['Colloidal Oatmeal','Soothing','ok'],
+        ['Glycerin','Humectant','ok'],
+        ['Fragrance','Scent','note'],
+        ['Dimethicone','Occlusive','ok']
+      ],
+      receipts:['EU CosIng','Open Beauty Facts'],
+      swap:{name:'Eczema therapy version', why:'Same family, no fragrance.'},
+      ingsPreview:'Colloidal Oatmeal, Glycerin, Fragrance&hellip;'
+    },
+  ];
+
+  // ===== build a real-looking barcode pattern =====
+  (() => {
+    const pattern = [3,1,1,2,1,3,1,1,2,1,3,2,1,1,3,1,2,1,3,1,1,2,1,3,1,1,2,3,1,1,3,1,2,1,1,3,2,1,1,3,1,2];
+    const widths = ['thin','','fat'];
+    const els = pattern.map(n => `<span class="${widths[n-1]||''} ${Math.random()<0.5?'tall':(Math.random()<0.5?'med':'short')}"></span>`).join('');
+    document.getElementById('bars').innerHTML = els;
+  })();
+
+  // ===== modes =====
+  const modes = document.querySelectorAll('.mode-btn');
+  const panes = {
+    camera: document.getElementById('vp-camera'),
+    search: document.getElementById('vp-search'),
+    upload: document.getElementById('vp-upload')
+  };
+  const setMode = (m) => {
+    modes.forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+    Object.entries(panes).forEach(([k,el]) => el.classList.toggle('show', k === m));
+    if (m === 'search') setTimeout(() => document.getElementById('search-input').focus(), 80);
+  };
+  modes.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  // ===== search =====
+  let activeFilter = 'all', query = '';
+  const renderResults = () => {
+    const list = document.getElementById('results-list');
+    const filtered = CATALOG.filter(p => {
+      if (activeFilter !== 'all' && p.cat !== activeFilter) return false;
+      if (!query) return true;
+      return `${p.name} ${p.brand} ${p.ingsPreview}`.toLowerCase().includes(query.toLowerCase());
+    });
+    if (!filtered.length) {
+      list.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted);font-size:14px">No products match. Try fewer letters, or switch to Camera.</div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(p => `
+      <div class="result" data-id="${p.id}">
+        <div class="result-img"><img alt="" src="${p.img}" /></div>
+        <div class="result-meta">
+          <div class="brand">${p.brand}</div>
+          <div class="name">${p.name}</div>
+          <div class="ings">${p.ingsPreview}</div>
+        </div>
+        <span class="result-flag ${p.flag}">${p.flagLabel}</span>
+      </div>
+    `).join('');
+  };
+  renderResults();
+
+  document.getElementById('filters').addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter');
+    if (!btn) return;
+    activeFilter = btn.dataset.f;
+    document.querySelectorAll('.filter').forEach(f => f.classList.toggle('on', f === btn));
+    renderResults();
+  });
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    query = e.target.value;
+    renderResults();
+  });
+
+  // ===== render report =====
+  const renderReport = (id) => {
+    const p = CATALOG.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('report-empty').style.display = 'none';
+    const filled = document.getElementById('report-filled');
+    filled.classList.add('show');
+    document.getElementById('rf-img').src = p.img;
+    document.getElementById('rf-label').textContent = p.label;
+    document.getElementById('rf-name').textContent = p.name;
+    document.getElementById('rf-brand').innerHTML = p.brand;
+    const flag = document.getElementById('rf-flag');
+    flag.className = `result-flag ${p.flag}`;
+    flag.textContent = p.flagLabel;
+    document.getElementById('rf-ana').innerHTML = p.ana;
+    document.getElementById('rf-reason').innerHTML = p.reason;
+    document.getElementById('rf-verdict').classList.toggle('ok', p.flag === 'ok');
+    document.getElementById('rf-ings').innerHTML = p.ings.map(([n,t,c]) =>
+      `<div class="ing-row"><span class="nm ${c==='warn'?'flagged':''}">${n}</span><span class="tag bg-${c}">${t}</span></div>`
+    ).join('');
+    document.getElementById('rf-receipts').innerHTML = p.receipts.map(r => `<span class="receipt-chip">${r}</span>`).join('');
+    document.getElementById('rf-swap-nm').textContent = p.swap.name;
+    document.getElementById('rf-swap-why').innerHTML = p.swap.why;
+  };
+
+  document.getElementById('results-list').addEventListener('click', (e) => {
+    const r = e.target.closest('.result');
+    if (!r) return;
+    document.querySelectorAll('.result.selected').forEach(x => x.classList.remove('selected'));
+    r.classList.add('selected');
+    renderReport(r.dataset.id);
+  });
+  document.querySelectorAll('.recent').forEach(r => {
+    r.addEventListener('click', () => renderReport(r.dataset.recent));
+  });
+
+  // ===== capture: drop the bottle =====
+  const captureBtn = document.getElementById('capture');
+  captureBtn.addEventListener('click', () => {
+    const falling = document.getElementById('falling');
+    const fallingImg = document.getElementById('falling-img');
+    const barcode = document.getElementById('barcode');
+    const overlay = document.getElementById('overlay');
+
+    captureBtn.classList.add('pressing');
+    setTimeout(() => captureBtn.classList.remove('pressing'), 200);
+
+    // pick a random product to drop
+    const candidates = CATALOG.filter(p => ['cera','hns','cef','cond'].includes(p.id));
+    const p = candidates[Math.floor(Math.random()*candidates.length)];
+    fallingImg.src = p.img;
+
+    // reset animations
+    falling.classList.remove('drop');
+    barcode.classList.remove('hit');
+    overlay.classList.remove('show');
+    overlay.querySelectorAll('.item').forEach(i => i.classList.remove('in'));
+    void falling.offsetWidth;
+    void barcode.offsetWidth;
+
+    // play
+    falling.classList.add('drop');
+    barcode.classList.add('hit');
+
+    // populate overlay items based on this product
+    document.getElementById('ov-name').textContent = p.name;
+    document.getElementById('ov-brand').innerHTML = p.brand;
+    const ovBadge = document.getElementById('ov-badge');
+    ovBadge.textContent = p.flagLabel;
+    ovBadge.style.background = p.flag==='ok' ? 'var(--sage-soft)' : (p.flag==='note' ? 'var(--mist-soft)' : 'var(--mist-soft)');
+    ovBadge.style.color = p.flag==='ok' ? 'var(--sage)' : (p.flag==='note' ? 'var(--teal)' : 'var(--terra-deep)');
+
+    const list = document.getElementById('ov-list');
+    list.innerHTML = p.ings.slice(0,5).map(([n,t,c]) =>
+      `<div class="item"><span class="nm">${n}</span><span class="tag ${c==='warn'?'warn':(c==='ok'?'ok':'')}">${t}</span></div>`
+    ).join('');
+
+    // after the drop lands, fade in the overlay and stagger ingredients
+    setTimeout(() => {
+      overlay.classList.add('show');
+      const items = overlay.querySelectorAll('.item');
+      items.forEach((it, i) => setTimeout(() => it.classList.add('in'), i*120));
+      // populate the right-hand report
+      setTimeout(() => renderReport(p.id), items.length*120 + 200);
+    }, 1100);
+  });
+
+  document.getElementById('add-to-routine').addEventListener('click', () => {
+    window.location.href = 'routine.html';
+  });
+
+  // / focuses search
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && !/input|textarea/i.test(e.target.tagName)) {
+      e.preventDefault();
+      setMode('search');
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

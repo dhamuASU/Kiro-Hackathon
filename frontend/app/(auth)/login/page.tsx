@@ -1,62 +1,102 @@
 "use client";
-import { useState } from "react";
-import { Leaf } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { toast } from "sonner";
+import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { SiteNav } from "@/components/layout/SiteNav";
 
 export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPage />
+    </Suspense>
+  );
+}
+
+function LoginPage() {
+  const search = useSearchParams();
+  const next = search.get("next") ?? "/dashboard";
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Dynamically import supabase to avoid SSR issues
-    const { createClient } = await import("@supabase/supabase-js");
-    const sb = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setSent(true);
-    setLoading(false);
+    try {
+      const sb = getSupabaseBrowser();
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      });
+      if (error) throw error;
+      setSent(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#28396C] text-white">
-            <Leaf className="h-6 w-6" />
-          </span>
-          <h1 className="text-2xl font-semibold text-[#28396C]">DermaDecode</h1>
-          <p className="text-center text-sm text-gray-500">Your personal skincare coach</p>
-        </div>
+    <div className="min-h-screen">
+      <SiteNav mode="auth" />
+      <main className="mx-auto flex min-h-[calc(100vh-68px)] max-w-md flex-col justify-center px-8 pt-32 pb-16">
+        <div className="eyebrow-mono mb-6">Sign in</div>
+        <h1 className="mb-6 text-[clamp(40px,5vw,56px)]">
+          Welcome back. <span className="block italic text-[var(--teal)]">Your chemistry coach is ready.</span>
+        </h1>
+        <p className="mb-10 text-[17px] text-[var(--muted)]">
+          We&rsquo;ll email you a one-tap magic link — no passwords to remember, no phishing surface.
+        </p>
 
         {sent ? (
-          <div className="rounded-2xl bg-[#F0FFC2] p-6 text-center">
-            <p className="font-semibold text-[#28396C]">Check your email ✉️</p>
-            <p className="mt-2 text-sm text-gray-600">We sent a magic link to <strong>{email}</strong></p>
+          <div className="paper-card p-7">
+            <div className="eyebrow-mono mb-4" style={{ color: "var(--sage)" }}>
+              Check your email
+            </div>
+            <p className="font-serif text-[22px] italic leading-[1.35] text-[var(--teal)]">
+              We sent a magic link to <strong className="not-italic text-[var(--ink)]">{email}</strong>.
+            </p>
+            <p className="mt-4 text-[14px] text-[var(--muted)]">
+              Click the link on this device. It&rsquo;s good for 1 hour. No email? Check spam, then try a different address.
+            </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-5">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#28396C]">Email address</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              <label htmlFor="email" className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-xl border border-gray-200 bg-[#EAE6BC]/40 px-4 py-3 text-sm outline-none focus:border-[#28396C] focus:ring-2 focus:ring-[#28396C]/20" />
+                className="mt-2 w-full rounded-sm border border-[var(--hairline)] bg-[var(--surface)] px-4 py-3.5 text-[16px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--ink)]"
+              />
             </div>
-            <button type="submit" disabled={loading}
-              className="w-full rounded-xl bg-[#28396C] py-3 text-sm font-semibold text-white disabled:opacity-60">
-              {loading ? "Sending…" : "Send magic link"}
+            <button type="submit" disabled={loading || !email} className="btn btn-lg w-full justify-center">
+              {loading ? "Sending…" : (<>Send magic link <span className="arrow">→</span></>)}
             </button>
           </form>
         )}
-      </div>
+
+        <p className="mt-10 text-[14px] text-[var(--muted)]">
+          New here?{" "}
+          <Link href="/signup" className="text-link">
+            Start free <span className="arrow">→</span>
+          </Link>
+        </p>
+      </main>
     </div>
   );
 }

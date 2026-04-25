@@ -36,6 +36,15 @@ class ProductResolveResponse(BaseModel):
     warning: str | None = None
 
 
+class ProductPasteRequest(BaseModel):
+    """Create a product from a user-pasted ingredient list — no LLM, no OBF."""
+    name: str
+    category_slug: str
+    brand: str | None = None
+    ingredients_raw: str
+    ingredients_parsed: list[str] | None = None  # optional; we'll split raw if missing
+
+
 # ── user_products ─────────────────────────────────────────────────────────────
 
 class UserProductCreate(BaseModel):
