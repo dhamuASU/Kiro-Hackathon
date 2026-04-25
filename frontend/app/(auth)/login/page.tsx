@@ -42,19 +42,27 @@ function LoginPage() {
   return (
     <div className="min-h-screen">
       <SiteNav mode="auth" />
-      <main className="mx-auto flex min-h-[calc(100vh-68px)] max-w-md flex-col justify-center px-8 pb-16 pt-32">
-        <div className="eyebrow-mono mb-6">Sign in</div>
-        <h1 className="mb-6 text-[clamp(40px,5vw,56px)]">
-          Welcome back.{" "}
-          <span className="block italic text-[var(--teal)]">
-            Your chemistry coach is ready.
-          </span>
-        </h1>
-        <p className="mb-10 text-[17px] text-[var(--muted)]">
-          Sign in with the email and password you set up. We&rsquo;ll drop you straight into your dashboard.
-        </p>
+      <main className="mx-auto grid min-h-[calc(100vh-68px)] max-w-[1100px] grid-cols-1 items-center gap-16 px-8 pb-16 pt-28 lg:grid-cols-[1.05fr_1fr]">
+        <div>
+          <div className="eyebrow-mono mb-6">Sign in</div>
+          <h1
+            className="mb-6"
+            style={{ fontSize: "clamp(34px, 4.2vw, 52px)", lineHeight: 1.05 }}
+          >
+            Welcome back.{" "}
+            <span className="block italic text-[var(--teal)]">
+              Your chemistry coach is ready.
+            </span>
+          </h1>
+          <p className="max-w-[46ch] text-[15px] text-[var(--muted)]">
+            Sign in with the email and password you set up. We&rsquo;ll drop you
+            straight into your dashboard.
+          </p>
+        </div>
 
-        <form onSubmit={submit} className="space-y-5">
+        <div className="paper-card p-9">
+          <h3 className="mb-5 text-[24px]">Sign in to CleanLabel</h3>
+          <form onSubmit={submit} className="space-y-5">
           <div>
             <label
               htmlFor="email"
@@ -99,14 +107,15 @@ function LoginPage() {
           >
             {loading ? "Signing in…" : (<>Sign in <span className="arrow">→</span></>)}
           </button>
-        </form>
+          </form>
 
-        <p className="mt-10 text-[14px] text-[var(--muted)]">
-          New here?{" "}
-          <Link href="/signup" className="text-link">
-            Create an account <span className="arrow">→</span>
-          </Link>
-        </p>
+          <p className="mt-6 text-center text-[13px] text-[var(--muted)]">
+            New here?{" "}
+            <Link href="/signup" className="text-link">
+              Create an account <span className="arrow">→</span>
+            </Link>
+          </p>
+        </div>
       </main>
     </div>
   );

@@ -141,6 +141,18 @@ class LLMClient:
         )
         return await _generate_json(contents)  # type: ignore[return-value]
 
+    async def generate_wellness(self, profile: dict, products: list[dict], flagged: list[dict], prompt: str) -> dict:
+        """
+        Returns {"skin_age": {...}, "routine": {...}}
+        """
+        contents = (
+            f"{prompt}\n\n"
+            f"User profile: {json.dumps(profile)}\n\n"
+            f"Products owned: {json.dumps(products)}\n\n"
+            f"Flagged ingredients: {json.dumps(flagged)}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
+
     async def resolve_product(self, brand: str, name: str, category_slug: str, prompt: str) -> dict:
         """
         Returns {"ingredients_parsed": [str], "confidence": float, "image_url": str | None}

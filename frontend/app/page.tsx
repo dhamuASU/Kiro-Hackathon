@@ -59,7 +59,7 @@ export default function LandingPage() {
                 <span className="opacity-40">·</span>
                 <span>No selling your data</span>
                 <span className="opacity-40">·</span>
-                <span>Built on Open Beauty Facts</span>
+                <span>Backed by peer-reviewed research</span>
               </div>
             </div>
 
@@ -67,6 +67,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ═══ TRY-IT DEMO ══════════════════════════════════════════════════ */}
+      <DemoSection />
 
       {/* ═══ COMPARISON ═══════════════════════════════════════════════════ */}
       <section id="science" className="pb-24 pt-12">
@@ -880,4 +883,329 @@ function useReveal() {
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Interactive demo — barcode scan → sample report
+// ═══════════════════════════════════════════════════════════════════════
+
+function DemoSection() {
+  const [phase, setPhase] = useState<"idle" | "scanning" | "done">("idle");
+
+  const start = () => {
+    if (phase !== "idle") return;
+    setPhase("scanning");
+    setTimeout(() => setPhase("done"), 2400);
+  };
+
+  const reset = () => setPhase("idle");
+
+  return (
+    <section id="demo" className="scroll-mt-24 border-y border-[var(--hairline)] bg-[var(--paper)]/40 py-24">
+      <div className="mx-auto max-w-[1240px] px-8">
+        <div className="mb-12 text-center">
+          <div className="eyebrow-mono mx-auto mb-5 inline-flex items-center gap-2.5 text-[var(--sage)]">
+            <span className="h-px w-6 bg-[var(--sage)]" />
+            Try it without an account
+            <span className="h-px w-6 bg-[var(--sage)]" />
+          </div>
+          <h2 className="mx-auto max-w-[20ch] text-[clamp(34px,4vw,52px)]">
+            Scan a sample bottle.{" "}
+            <span className="italic text-[var(--teal)]">See what happens.</span>
+          </h2>
+          <p className="mx-auto mt-5 max-w-[52ch] text-[17px] text-[var(--muted)]">
+            One click runs the same five-agent pipeline you&rsquo;ll get in your
+            bathroom — minus the bathroom.
+          </p>
+        </div>
+
+        <div className="grid items-start gap-8 lg:grid-cols-[1fr_1.05fr]">
+          <DemoScanner phase={phase} onClick={start} onReset={reset} />
+          <DemoReport phase={phase} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DemoScanner({
+  phase,
+  onClick,
+  onReset,
+}: {
+  phase: "idle" | "scanning" | "done";
+  onClick: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="paper-card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[var(--hairline)] px-7 py-4">
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              phase === "scanning"
+                ? "animate-pulse bg-[var(--terra)]"
+                : phase === "done"
+                  ? "bg-[var(--sage)]"
+                  : "bg-[var(--muted)]",
+            )}
+          />
+          {phase === "scanning"
+            ? "Scanning…"
+            : phase === "done"
+              ? "Capture complete"
+              : "Camera idle"}
+        </div>
+        <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          UPC · 037000871422
+        </span>
+      </div>
+
+      <button
+        onClick={phase === "idle" ? onClick : undefined}
+        disabled={phase !== "idle"}
+        className="group relative block aspect-[4/5] w-full overflow-hidden bg-[#1A2322] disabled:cursor-default"
+        aria-label="Run scan demo"
+      >
+        {/* faux camera depth */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 30%, rgba(255,250,238,0.16), transparent 55%), radial-gradient(ellipse at 25% 80%, rgba(207,221,220,0.14), transparent 55%), linear-gradient(180deg, #1F2A28 0%, #121A19 100%)",
+          }}
+        />
+
+        {/* viewfinder corners */}
+        <div className="pointer-events-none absolute inset-[14%]">
+          {[0, 1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className="absolute h-7 w-7 border-2 border-[#FBF9F4]/85"
+              style={{
+                top: i < 2 ? 0 : "auto",
+                bottom: i >= 2 ? 0 : "auto",
+                left: i % 2 === 0 ? 0 : "auto",
+                right: i % 2 === 1 ? 0 : "auto",
+                borderRight: i % 2 === 0 ? "none" : undefined,
+                borderLeft: i % 2 === 1 ? "none" : undefined,
+                borderTop: i < 2 ? undefined : "none",
+                borderBottom: i < 2 ? "none" : undefined,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* sweeping scan line (only while scanning) */}
+        {phase === "scanning" && (
+          <span className="demo-scanline pointer-events-none absolute left-[14%] right-[14%] h-[2px]" />
+        )}
+
+        {/* barcode */}
+        <div
+          className={cn(
+            "absolute left-1/2 -translate-x-1/2 w-[62%] rounded-[6px] bg-white p-4 shadow-[0_8px_28px_rgba(0,0,0,0.35)] transition-all duration-500",
+            phase === "done"
+              ? "bottom-[42%] scale-[0.78]"
+              : "bottom-[18%] scale-100",
+          )}
+        >
+          <div className="flex h-[46px] items-end gap-[2px]">
+            {[3, 1, 3, 2, 1, 2, 3, 1, 1, 3, 2, 1, 3, 1, 2, 1, 3, 1, 2, 3, 1, 2, 1, 3].map(
+              (h, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "block bg-[#1A2322]",
+                    h === 1 ? "w-[2px]" : h === 2 ? "w-[3px]" : "w-[2px]",
+                  )}
+                  style={{ height: h === 3 ? "100%" : h === 2 ? "88%" : "74%" }}
+                />
+              ),
+            )}
+          </div>
+          <div className="mt-1.5 text-center font-mono text-[11px] tracking-[0.18em] text-[#1A2322]">
+            037000871422
+          </div>
+        </div>
+
+        {/* idle CTA overlay */}
+        {phase === "idle" && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 pb-8">
+            <span className="rounded-full bg-[var(--terra)] px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-white shadow-lg transition-transform group-hover:scale-105">
+              ▶ Tap to scan
+            </span>
+          </div>
+        )}
+
+        {/* done badge */}
+        {phase === "done" && (
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
+            <span className="rounded-sm border border-[var(--sage)] bg-[var(--sage-soft)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--sage)] shadow-sm">
+              ✓ Match found · Head & Shoulders
+            </span>
+          </div>
+        )}
+      </button>
+
+      <div className="flex items-center justify-between border-t border-[var(--hairline)] px-7 py-4">
+        <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          {phase === "done" ? "Sample report ready →" : "Live demo · no account needed"}
+        </span>
+        {phase === "done" ? (
+          <button onClick={onReset} className="text-link text-[12px]">
+            Reset
+          </button>
+        ) : (
+          <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]/60">
+            5-agent pipeline
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DemoReport({ phase }: { phase: "idle" | "scanning" | "done" }) {
+  if (phase === "idle") {
+    return (
+      <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-sm border border-dashed border-[var(--hairline)] p-10 text-center">
+        <div className="font-serif text-[22px] italic leading-[1.35] text-[var(--muted)]">
+          Your sample report appears here once the scanner finishes.
+        </div>
+        <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          ↑ Tap the bottle
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "scanning") {
+    return (
+      <div className="space-y-3 rounded-sm border border-[var(--hairline)] bg-[var(--surface)] p-7">
+        <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          Agents working…
+        </div>
+        {[
+          "Scanner — reading 24 ingredients",
+          "Profile reasoner — ranking by your goals",
+          "Analogy writer — composing plain-English",
+          "Alternative finder — sourcing cleaner swap",
+          "Regulatory cross-ref — checking EU / CA",
+        ].map((line, i) => (
+          <div
+            key={line}
+            className="flex items-center gap-3 font-mono text-[12px] text-[var(--ink)]"
+            style={{
+              opacity: 0,
+              animation: `demoFade 0.4s ease forwards`,
+              animationDelay: `${i * 0.4}s`,
+            }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--terra)]" />
+            {line}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // phase === "done"
+  return (
+    <article
+      className="paper-card overflow-hidden"
+      style={{ animation: "demoFade 0.5s ease forwards" }}
+    >
+      <div className="flex items-center justify-between border-b border-[var(--hairline)] bg-[var(--paper)] px-7 py-4">
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">
+            Head & Shoulders · Shampoo
+          </div>
+          <div className="mt-0.5 font-serif text-[20px]">Classic Clean</div>
+        </div>
+        <span className="rounded-sm bg-[var(--terra)]/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--terra-deep)]">
+          3 flagged
+        </span>
+      </div>
+
+      <ul className="divide-y divide-[var(--hairline)]">
+        {[
+          {
+            name: "Sodium Laureth Sulfate",
+            relevance: "high",
+            quote:
+              "SLES is like an industrial degreaser for a kitchen that only needs a light wipe — it removes too much oil, which can rebound into more breakouts.",
+          },
+          {
+            name: "Methylisothiazolinone",
+            relevance: "high",
+            quote:
+              "MI is a preservative powerful enough to be banned in EU leave-on products. For sensitive skin, it&rsquo;s the smoke detector that won&rsquo;t stop beeping.",
+            ban: "Restricted in EU",
+          },
+          {
+            name: "Parfum",
+            relevance: "medium",
+            quote:
+              "Fragrance on acne-prone skin is a sprinkler that also sprays gasoline — a common silent trigger of irritation.",
+          },
+        ].map((row) => (
+          <li key={row.name} className="px-7 py-5">
+            <div className="flex items-start gap-4">
+              <span
+                className={cn(
+                  "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+                  row.relevance === "high"
+                    ? "bg-[var(--terra)]"
+                    : "bg-[var(--mist)]",
+                )}
+              />
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="text-[15px] font-medium text-[var(--ink)]">
+                    {row.name}
+                  </span>
+                  {row.ban && <span className="chip">{row.ban}</span>}
+                </div>
+                <p
+                  className="mt-2 font-serif text-[18px] italic leading-[1.4] text-[var(--teal)]"
+                  dangerouslySetInnerHTML={{ __html: `&ldquo;${row.quote}&rdquo;` }}
+                />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="bg-[var(--sage-soft)] px-7 py-5">
+        <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--sage)]">
+          Cleaner swap
+        </div>
+        <div className="mt-2 flex flex-wrap items-baseline gap-3">
+          <span className="text-[16px] font-medium text-[var(--ink)]">
+            Hello Bello Sulfate-Free Shampoo
+          </span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">
+            $9 · widely available
+          </span>
+        </div>
+        <p className="mt-2 max-w-[60ch] text-[14px] text-[var(--ink)]">
+          Same lather feel, no SLES, fragrance-free. Good fit for sensitive
+          scalp.
+        </p>
+      </div>
+
+      <div className="border-t border-[var(--hairline)] px-7 py-4 text-center">
+        <Link href="/signup" className="text-link text-[13px]">
+          Run this on your own bathroom <span className="arrow">→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+// Tiny utility (avoids importing cn from app dir)
+function cn(...parts: (string | false | null | undefined)[]): string {
+  return parts.filter(Boolean).join(" ");
 }

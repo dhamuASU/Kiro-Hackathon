@@ -8,7 +8,9 @@ import type {
   AnalysisOut,
   ProductAnalysis,
   ProfileOut,
+  RoutineStep,
   UserProductOut,
+  Wellness,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -141,7 +143,7 @@ function DashboardPage() {
   return (
     <main className="mx-auto max-w-[1100px] px-8 pb-24 pt-10">
       {/* ── Hero — compact, intent-led ─────────────────────────────────── */}
-      <header className="border-b border-[var(--hairline)] pb-8">
+      <header className="border-b border-[var(--hairline)] pb-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="eyebrow-mono">
             {hasAnalysis ? "Your report" : "Your dashboard"}
@@ -154,27 +156,46 @@ function DashboardPage() {
           )}
         </div>
 
-        <h1 className="mt-4 max-w-[24ch] text-[clamp(32px,4.4vw,52px)] leading-[1.04]">
-          {headline.lead}{" "}
-          <span className="italic text-[var(--teal)]">{headline.tail}</span>
-        </h1>
+        <div className="mt-5 grid grid-cols-1 items-end gap-10 lg:grid-cols-[1.4fr_auto]">
+          <div>
+            <h1
+              className="max-w-[22ch]"
+              style={{ fontSize: "clamp(30px, 3.8vw, 46px)", lineHeight: 1.05 }}
+            >
+              {headline.lead}{" "}
+              <span className="italic text-[var(--teal)]">{headline.tail}</span>
+            </h1>
 
-        {/* Profile chips + edit */}
-        <div className="mt-6 flex flex-wrap items-center gap-2.5">
-          {profile?.skin_type && (
-            <Chip tone="clear">{profile.skin_type} skin</Chip>
+            {/* Profile chips + edit */}
+            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+              {profile?.skin_type && (
+                <Chip tone="clear">{profile.skin_type} skin</Chip>
+              )}
+              {profile?.skin_goals.slice(0, 4).map((g) => (
+                <Chip key={g} tone="note">
+                  {g.replace(/_/g, " ")}
+                </Chip>
+              ))}
+              <Link href="/settings" className="text-link ml-1 text-[12px]">
+                Edit profile <span className="arrow">→</span>
+              </Link>
+            </div>
+          </div>
+
+          {hasAnalysis && (
+            <RoutineDonut
+              clean={counts.cleanProducts}
+              high={output.filter((p) => p.flagged.some((f) => f.relevance === "high")).length}
+              medium={output.filter((p) =>
+                !p.flagged.some((f) => f.relevance === "high") &&
+                p.flagged.some((f) => f.relevance === "medium")
+              ).length}
+              low={output.filter((p) =>
+                p.flagged.length > 0 &&
+                !p.flagged.some((f) => f.relevance === "high" || f.relevance === "medium")
+              ).length}
+            />
           )}
-          {profile?.skin_goals.slice(0, 4).map((g) => (
-            <Chip key={g} tone="note">
-              {g.replace(/_/g, " ")}
-            </Chip>
-          ))}
-          <Link
-            href="/settings"
-            className="text-link ml-1 text-[12px]"
-          >
-            Edit profile <span className="arrow">→</span>
-          </Link>
         </div>
       </header>
 
@@ -235,6 +256,14 @@ function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Wellness panels (skin age + routine builder) ────────────────── */}
+      {hasAnalysis && analysis?.wellness && (
+        <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+          <SkinAgeCard wellness={analysis.wellness} />
+          <RoutineCard wellness={analysis.wellness} />
+        </div>
+      )}
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
       {!hasAnalysis ? (
@@ -698,6 +727,227 @@ function formatRelativeDate(iso: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function RoutineDonut({
+  clean,
+  high,
+  medium,
+  low,
+}: {
+  clean: number;
+  high: number;
+  medium: number;
+  low: number;
+}) {
+  const total = clean + high + medium + low;
+  if (total === 0) return null;
+
+  // Donut math — circumference of a circle with r=42 ≈ 263.89.
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const segs = [
+    { value: high, color: "var(--terra)", label: "High" },
+    { value: medium, color: "var(--mist)", label: "Medium" },
+    { value: low, color: "var(--muted)", label: "Low" },
+    { value: clean, color: "var(--sage)", label: "Clean" },
+  ].filter((s) => s.value > 0);
+
+  let offset = 0;
+  const cleanPct = Math.round((clean / total) * 100);
+
+  return (
+    <figure className="flex items-center gap-5">
+      <svg
+        viewBox="0 0 100 100"
+        width="120"
+        height="120"
+        className="shrink-0"
+        aria-label={`${cleanPct}% clean products`}
+      >
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--hairline)" strokeWidth="10" />
+        {segs.map((s, i) => {
+          const len = (s.value / total) * c;
+          const dasharray = `${len} ${c - len}`;
+          const dashoffset = -offset;
+          offset += len;
+          return (
+            <circle
+              key={i}
+              cx="50"
+              cy="50"
+              r={r}
+              fill="none"
+              stroke={s.color}
+              strokeWidth="10"
+              strokeDasharray={dasharray}
+              strokeDashoffset={dashoffset}
+              transform="rotate(-90 50 50)"
+              strokeLinecap="butt"
+            />
+          );
+        })}
+        <text
+          x="50"
+          y="48"
+          textAnchor="middle"
+          className="fill-[var(--ink)] font-serif"
+          style={{ fontSize: "20px" }}
+        >
+          {cleanPct}%
+        </text>
+        <text
+          x="50"
+          y="62"
+          textAnchor="middle"
+          className="fill-[var(--muted)]"
+          style={{ fontSize: "7px", letterSpacing: "0.1em" }}
+        >
+          CLEAN
+        </text>
+      </svg>
+      <figcaption className="space-y-1.5">
+        {segs.map((s) => (
+          <div key={s.label} className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.08em] text-[var(--muted)]">
+            <span
+              className="inline-block h-2 w-2 rounded-full"
+              style={{ background: s.color }}
+            />
+            <span className="text-[var(--ink)]">{s.value}</span>
+            <span>{s.label}</span>
+          </div>
+        ))}
+      </figcaption>
+    </figure>
+  );
+}
+
+function SkinAgeCard({ wellness }: { wellness: Wellness }) {
+  const { current, potential, rationale, sustainability_note } = wellness.skin_age;
+  const delta = current - potential;
+  const better = delta > 0;
+
+  return (
+    <article className="paper-card overflow-hidden">
+      <div className="border-b border-[var(--hairline)] bg-[var(--paper)] px-7 py-4">
+        <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          Skin age estimate
+        </div>
+      </div>
+      <div className="px-7 py-7">
+        <div className="flex items-baseline gap-6">
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+              Today
+            </div>
+            <div className="mt-1 font-serif text-[64px] leading-none text-[var(--ink)]">
+              {current}
+            </div>
+          </div>
+
+          <span
+            className="text-[28px] text-[var(--muted)]"
+            aria-hidden
+          >
+            →
+          </span>
+
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--sage)]">
+              In 6 months
+            </div>
+            <div
+              className={cn(
+                "mt-1 font-serif text-[64px] leading-none",
+                better ? "text-[var(--sage)]" : "text-[var(--ink)]",
+              )}
+            >
+              {potential}
+            </div>
+          </div>
+
+          {better && (
+            <span className="ml-auto rounded-sm bg-[var(--sage-soft)] px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--sage)]">
+              − {delta} yr
+            </span>
+          )}
+        </div>
+
+        <p className="mt-6 max-w-[60ch] text-[15px] leading-[1.55] text-[var(--ink)]">
+          {rationale}
+        </p>
+
+        <div className="mt-5 rounded-sm border-l-2 border-[var(--sage)] bg-[var(--sage-soft)]/40 px-4 py-3">
+          <div className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--sage)]">
+            Sustainable angle
+          </div>
+          <p className="mt-1.5 font-serif text-[16px] italic leading-[1.5] text-[var(--teal)]">
+            {sustainability_note}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function RoutineCard({ wellness }: { wellness: Wellness }) {
+  const [tab, setTab] = useState<"morning" | "evening">("morning");
+  const steps = wellness.routine[tab] ?? [];
+
+  return (
+    <article className="paper-card overflow-hidden">
+      <div className="flex items-center justify-between border-b border-[var(--hairline)] bg-[var(--paper)] px-7 py-4">
+        <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+          Routine builder
+        </div>
+        <div className="flex gap-1 rounded-full border border-[var(--hairline)] bg-[var(--surface)] p-1">
+          {(["morning", "evening"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={cn(
+                "rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.08em] transition-all",
+                tab === t
+                  ? "bg-[var(--ink)] text-[var(--bg)]"
+                  : "text-[var(--muted)] hover:text-[var(--ink)]",
+              )}
+            >
+              {t === "morning" ? "AM" : "PM"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <ol className="divide-y divide-[var(--hairline)]">
+        {steps.map((s) => (
+          <RoutineStepRow key={`${tab}-${s.step}`} step={s} />
+        ))}
+      </ol>
+    </article>
+  );
+}
+
+function RoutineStepRow({ step }: { step: RoutineStep }) {
+  return (
+    <li className="flex items-start gap-5 px-7 py-5">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--paper)] font-mono text-[12px] text-[var(--ink)]">
+        {String(step.step).padStart(2, "0")}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-medium capitalize text-[var(--ink)]">
+          {step.category}
+        </div>
+        <p className="mt-1 text-[14px] leading-[1.5] text-[var(--muted)]">
+          {step.why}
+        </p>
+        {step.key_ingredient && (
+          <div className="mt-2 inline-flex items-center gap-2 rounded-sm bg-[var(--sage-soft)]/50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--sage)]">
+            <span className="h-1 w-1 rounded-full bg-[var(--sage)]" />
+            {step.key_ingredient}
+          </div>
+        )}
+      </div>
+    </li>
+  );
 }
 
 function DashboardSkeleton() {

@@ -37,13 +37,19 @@ export function SiteNav({
         {mode === "marketing" ? (
           <>
             <nav className="hidden gap-9 md:flex" aria-label="Primary">
-              <a className="nav-underline relative text-sm" href="#how">
+              <a className="nav-underline relative text-sm" href="/#how">
                 How it works
               </a>
-              <a className="nav-underline relative text-sm" href="#reports">
+              <a className="nav-underline relative text-sm" href="/#demo">
+                Demo
+              </a>
+              <a className="nav-underline relative text-sm" href="/#reports">
                 Example reports
               </a>
-              <a className="nav-underline relative text-sm" href="#faq">
+              <Link className="nav-underline relative text-sm" href="/research">
+                Research
+              </Link>
+              <a className="nav-underline relative text-sm" href="/#faq">
                 FAQ
               </a>
             </nav>

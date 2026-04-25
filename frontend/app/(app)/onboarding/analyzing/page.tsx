@@ -24,11 +24,11 @@ interface AgentStep {
 }
 
 const INITIAL_AGENTS: AgentStep[] = [
-  { slug: "scanner",           name: "Scanner",            desc: "Reading each product's ingredient list", status: "pending" },
-  { slug: "profile_reasoner",  name: "Profile Reasoner",   desc: "Ranking by what matters for your skin", status: "pending" },
-  { slug: "analogy_writer",    name: "Analogy Writer",     desc: "Writing plain-English metaphors", status: "pending" },
-  { slug: "alternative_finder",name: "Alternative Finder", desc: "Picking cleaner swaps that match your profile", status: "pending" },
-  { slug: "regulatory_xref",   name: "Regulatory Cross-Ref", desc: "Surfacing EU / California / Canada citations", status: "pending" },
+  { slug: "scanner",           name: "Reading ingredients",       desc: "Pulling the full ingredient list for every product", status: "pending" },
+  { slug: "profile_reasoner",  name: "Matching to your profile",  desc: "Ranking what actually matters for your skin and goals", status: "pending" },
+  { slug: "analogy_writer",    name: "Translating the chemistry", desc: "Turning lab names into plain-English explanations", status: "pending" },
+  { slug: "alternative_finder",name: "Finding cleaner swaps",     desc: "Sourcing alternatives that fit your profile and budget", status: "pending" },
+  { slug: "regulatory_xref",   name: "Checking regulations",      desc: "Cross-referencing EU, California, and Canada cosmetic rules", status: "pending" },
 ];
 
 function AnalyzingStep() {
@@ -133,12 +133,13 @@ function AnalyzingStep() {
     <div>
       <div className="eyebrow-mono mb-5">Analyzing — Step 5 of 5</div>
       <h1 className="mb-4 text-[clamp(36px,5vw,54px)]">
-        Our five agents are{" "}
-        <span className="italic text-[var(--teal)]">reading your bathroom.</span>
+        Reading{" "}
+        <span className="italic text-[var(--teal)]">your bathroom.</span>
       </h1>
       <p className="mb-10 max-w-[52ch] text-[17px] text-[var(--muted)]">
-        Give it about a minute. Each agent has one narrow job — when they&rsquo;re
-        all done, the Orchestrator composes a single report from their output.
+        This usually takes about a minute. We&rsquo;re going through every
+        ingredient on your shelf, checking it against your profile and current
+        cosmetic regulations, and writing it up in plain English.
       </p>
 
       <ol className="space-y-3">
@@ -167,9 +168,8 @@ function AnalyzingStep() {
             {error ?? "Something went wrong on the server."}
           </p>
           <p className="mt-2 text-[13px] text-[var(--muted)]">
-            This often means the agents backend isn&rsquo;t implemented yet.
-            Infrastructure is healthy (routers + DB work) — the LLM pipeline is
-            the agents teammate&rsquo;s lane.
+            Something on our side hiccupped while running the analysis. You can
+            retry, or head to your dashboard and try again later.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <button onClick={retry} className="btn">

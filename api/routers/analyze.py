@@ -121,6 +121,7 @@ async def _run(analysis_id: str, user_id: str, db: SupabaseClient, bus: EventBus
         db.table("analyses").update({
             "status": "completed",
             "output": output,
+            "wellness": orchestrator.last_wellness,
             "duration_ms": duration_ms,
             "llm_model": settings.gemini_model,
             "completed_at": datetime.now(timezone.utc).isoformat(),

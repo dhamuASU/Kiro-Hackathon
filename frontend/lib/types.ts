@@ -110,6 +110,28 @@ export interface ProductAnalysis {
   alternatives: Alternative[];
 }
 
+export interface SkinAge {
+  current: number;
+  potential: number;
+  rationale: string;
+  sustainability_note: string;
+}
+
+export interface RoutineStep {
+  step: number;
+  category: string;
+  why: string;
+  key_ingredient: string;
+}
+
+export interface Wellness {
+  skin_age: SkinAge;
+  routine: {
+    morning: RoutineStep[];
+    evening: RoutineStep[];
+  };
+}
+
 export interface AnalysisOut {
   id: string;
   user_id: string;
@@ -117,6 +139,7 @@ export interface AnalysisOut {
   profile_snapshot: Record<string, unknown>;
   user_product_ids: string[];
   output?: ProductAnalysis[] | null;
+  wellness?: Wellness | null;
   llm_model?: string | null;
   total_tokens?: number | null;
   duration_ms?: number | null;

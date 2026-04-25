@@ -85,17 +85,19 @@ button { font: inherit; cursor: pointer; }
 .font-sans   { font-family: var(--sans); }
 .font-mono   { font-family: var(--mono); }
 
-h1, h2, h3, h4 {
-  font-family: var(--serif);
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-  margin: 0;
+@layer base {
+  h1, h2, h3, h4 {
+    font-family: var(--serif);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+    margin: 0;
+  }
+  h1 { font-size: clamp(40px, 5.5vw, 72px); }
+  h2 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.04; }
+  h3 { font-size: clamp(24px, 2.6vw, 34px); }
+  p  { margin: 0; }
 }
-h1 { font-size: clamp(48px, 7vw, 88px); }
-h2 { font-size: clamp(40px, 5vw, 64px); line-height: 1.02; }
-h3 { font-size: clamp(26px, 3vw, 36px); }
-p  { margin: 0; }
 
 /* Mono eyebrow (e.g. "PERSONAL CHEMISTRY COACH") */
 .eyebrow-mono {
@@ -214,6 +216,24 @@ p  { margin: 0; }
 
 /* Keep shimmer for skeleton loading */
 @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+
+/* Landing-page interactive demo */
+@keyframes demoScan {
+  0%   { top: 14%; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 86%; opacity: 0; }
+}
+.demo-scanline {
+  background: linear-gradient(90deg, transparent, rgba(207,221,220,0.95), transparent);
+  box-shadow: 0 0 18px 4px rgba(207,221,220,0.4);
+  top: 14%;
+  animation: demoScan 1.6s linear infinite;
+}
+@keyframes demoFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 .skeleton {
   background: linear-gradient(90deg, var(--paper) 25%, var(--hairline) 50%, var(--paper) 75%);
   background-size: 800px 100%;

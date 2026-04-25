@@ -37,6 +37,7 @@ class AnalysisOut(BaseModel):
     profile_snapshot: dict = {}
     user_product_ids: list[str] = []
     output: list[ProductAnalysis] | None = None
+    wellness: dict | None = None
     llm_model: str | None = None
     total_tokens: int | None = None
     duration_ms: int | None = None

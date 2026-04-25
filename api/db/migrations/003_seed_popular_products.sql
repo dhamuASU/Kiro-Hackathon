@@ -1,0 +1,147 @@
+-- ───────────────────────────────────────────────────────────────────────────
+-- 003_seed_popular_products.sql
+-- Expands the "popular products" picker shown during onboarding so every
+-- category has 4–6 well-known options and the picker never lands empty.
+-- Safe to re-run (off_id is unique → on conflict do nothing).
+-- ───────────────────────────────────────────────────────────────────────────
+
+insert into products (off_id, name, brand, category_slug, ingredients_raw, ingredients_parsed, source, popularity) values
+  -- ── shampoo ───────────────────────────────────────────────────────────────
+  ('seed-dove-nutritive-shampoo', 'Daily Moisture Shampoo', 'Dove', 'shampoo',
+    'Water, Sodium Laureth Sulfate, Sodium Lauryl Sulfate, Cocamidopropyl Betaine, Glycol Distearate, Parfum, Guar Hydroxypropyltrimonium Chloride, Methylchloroisothiazolinone, Methylisothiazolinone',
+    '["Water","Sodium Laureth Sulfate","Sodium Lauryl Sulfate","Cocamidopropyl Betaine","Glycol Distearate","Parfum","Guar Hydroxypropyltrimonium Chloride","Methylchloroisothiazolinone","Methylisothiazolinone"]'::jsonb,
+    'open_beauty_facts', 88),
+  ('seed-loreal-elvive-shampoo', 'Elvive Total Repair 5 Shampoo', 'L''Oréal Paris', 'shampoo',
+    'Water, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Sodium Chloride, Parfum, Citric Acid, Methylparaben, Propylparaben, Salicylic Acid',
+    '["Water","Sodium Laureth Sulfate","Cocamidopropyl Betaine","Sodium Chloride","Parfum","Citric Acid","Methylparaben","Propylparaben","Salicylic Acid"]'::jsonb,
+    'open_beauty_facts', 84),
+  ('seed-ogx-coconut-shampoo', 'Nourishing + Coconut Milk Shampoo', 'OGX', 'shampoo',
+    'Water, Sodium C14-16 Olefin Sulfonate, Cocamidopropyl Betaine, Cocos Nucifera (Coconut) Oil, Hydrolyzed Soy Protein, Parfum, Methylisothiazolinone',
+    '["Water","Sodium C14-16 Olefin Sulfonate","Cocamidopropyl Betaine","Cocos Nucifera (Coconut) Oil","Hydrolyzed Soy Protein","Parfum","Methylisothiazolinone"]'::jsonb,
+    'open_beauty_facts', 80),
+
+  -- ── conditioner ───────────────────────────────────────────────────────────
+  ('seed-dove-nutritive-conditioner', 'Daily Moisture Conditioner', 'Dove', 'conditioner',
+    'Water, Cetearyl Alcohol, Behentrimonium Chloride, Dimethicone, Parfum, Glutamic Acid, Methylchloroisothiazolinone, Methylisothiazolinone',
+    '["Water","Cetearyl Alcohol","Behentrimonium Chloride","Dimethicone","Parfum","Glutamic Acid","Methylchloroisothiazolinone","Methylisothiazolinone"]'::jsonb,
+    'open_beauty_facts', 86),
+  ('seed-pantene-pro-v-conditioner', 'Pro-V Daily Moisture Renewal Conditioner', 'Pantene', 'conditioner',
+    'Water, Stearyl Alcohol, Cetyl Alcohol, Behentrimonium Methosulfate, Bis-Aminopropyl Dimethicone, Parfum, Methylparaben, Propylparaben',
+    '["Water","Stearyl Alcohol","Cetyl Alcohol","Behentrimonium Methosulfate","Bis-Aminopropyl Dimethicone","Parfum","Methylparaben","Propylparaben"]'::jsonb,
+    'open_beauty_facts', 82),
+  ('seed-tresemme-keratin-conditioner', 'Keratin Smooth Conditioner', 'TRESemmé', 'conditioner',
+    'Water, Cetearyl Alcohol, Behentrimonium Chloride, Dimethicone, Parfum, Hydrolyzed Keratin, DMDM Hydantoin',
+    '["Water","Cetearyl Alcohol","Behentrimonium Chloride","Dimethicone","Parfum","Hydrolyzed Keratin","DMDM Hydantoin"]'::jsonb,
+    'open_beauty_facts', 78),
+  ('seed-shea-moisture-conditioner', 'Raw Shea Butter Restorative Conditioner', 'SheaMoisture', 'conditioner',
+    'Water, Cetearyl Alcohol, Behentrimonium Methosulfate, Butyrospermum Parkii (Shea) Butter, Argania Spinosa Kernel Oil, Aloe Barbadensis Leaf Juice, Parfum, Phenoxyethanol',
+    '["Water","Cetearyl Alcohol","Behentrimonium Methosulfate","Butyrospermum Parkii (Shea) Butter","Argania Spinosa Kernel Oil","Aloe Barbadensis Leaf Juice","Parfum","Phenoxyethanol"]'::jsonb,
+    'open_beauty_facts', 74),
+
+  -- ── body_wash ─────────────────────────────────────────────────────────────
+  ('seed-dove-deep-moisture', 'Deep Moisture Body Wash', 'Dove', 'body_wash',
+    'Water, Sodium Lauroyl Isethionate, Sodium Lauroyl Sarcosinate, Cocamidopropyl Betaine, Glycerin, Parfum, DMDM Hydantoin',
+    '["Water","Sodium Lauroyl Isethionate","Sodium Lauroyl Sarcosinate","Cocamidopropyl Betaine","Glycerin","Parfum","DMDM Hydantoin"]'::jsonb,
+    'open_beauty_facts', 89),
+  ('seed-olay-body-wash', 'Ultra Moisture Body Wash with Shea Butter', 'Olay', 'body_wash',
+    'Water, Sodium Trideceth Sulfate, Cocamidopropyl Betaine, Sodium Lauroamphoacetate, Butyrospermum Parkii Butter, Parfum, Methylisothiazolinone',
+    '["Water","Sodium Trideceth Sulfate","Cocamidopropyl Betaine","Sodium Lauroamphoacetate","Butyrospermum Parkii Butter","Parfum","Methylisothiazolinone"]'::jsonb,
+    'open_beauty_facts', 76),
+  ('seed-axe-body-wash', 'Apollo Body Wash', 'AXE', 'body_wash',
+    'Water, Sodium Laureth Sulfate, Cocamidopropyl Betaine, Sodium Chloride, Parfum, Diethyl Phthalate, Methylchloroisothiazolinone',
+    '["Water","Sodium Laureth Sulfate","Cocamidopropyl Betaine","Sodium Chloride","Parfum","Diethyl Phthalate","Methylchloroisothiazolinone"]'::jsonb,
+    'open_beauty_facts', 70),
+
+  -- ── face_cleanser ─────────────────────────────────────────────────────────
+  ('seed-cetaphil-gentle-cleanser', 'Gentle Skin Cleanser', 'Cetaphil', 'face_cleanser',
+    'Water, Cetyl Alcohol, Propylene Glycol, Sodium Lauryl Sulfate, Stearyl Alcohol, Methylparaben, Propylparaben, Butylparaben',
+    '["Water","Cetyl Alcohol","Propylene Glycol","Sodium Lauryl Sulfate","Stearyl Alcohol","Methylparaben","Propylparaben","Butylparaben"]'::jsonb,
+    'open_beauty_facts', 91),
+  ('seed-laroche-toleriane-cleanser', 'Toleriane Hydrating Gentle Cleanser', 'La Roche-Posay', 'face_cleanser',
+    'Water, Sodium Cocoamphoacetate, Glycerin, Niacinamide, Ceramide-NP, Sodium Chloride, Phenoxyethanol',
+    '["Water","Sodium Cocoamphoacetate","Glycerin","Niacinamide","Ceramide-NP","Sodium Chloride","Phenoxyethanol"]'::jsonb,
+    'open_beauty_facts', 86),
+  ('seed-clinique-liquid-soap', 'Liquid Facial Soap Mild', 'Clinique', 'face_cleanser',
+    'Water, Sodium Tallowate, Sodium Cocoate, Sodium Chloride, Glycerin, Parfum, BHT',
+    '["Water","Sodium Tallowate","Sodium Cocoate","Sodium Chloride","Glycerin","Parfum","BHT"]'::jsonb,
+    'open_beauty_facts', 72),
+
+  -- ── moisturizer ───────────────────────────────────────────────────────────
+  ('seed-cerave-daily-moisturizer', 'Daily Moisturizing Lotion', 'CeraVe', 'moisturizer',
+    'Water, Glycerin, Caprylic/Capric Triglyceride, Behentrimonium Methosulfate, Cetearyl Alcohol, Ceramide-NP, Ceramide-AP, Ceramide-EOP, Phytosphingosine, Cholesterol, Hyaluronic Acid, Phenoxyethanol',
+    '["Water","Glycerin","Caprylic/Capric Triglyceride","Behentrimonium Methosulfate","Cetearyl Alcohol","Ceramide-NP","Ceramide-AP","Ceramide-EOP","Phytosphingosine","Cholesterol","Hyaluronic Acid","Phenoxyethanol"]'::jsonb,
+    'open_beauty_facts', 95),
+  ('seed-neutrogena-hydroboost', 'Hydro Boost Water Gel', 'Neutrogena', 'moisturizer',
+    'Water, Dimethicone, Glycerin, Hyaluronic Acid, Phenoxyethanol, Carbomer, Ethylhexylglycerin, Parfum, Blue 1',
+    '["Water","Dimethicone","Glycerin","Hyaluronic Acid","Phenoxyethanol","Carbomer","Ethylhexylglycerin","Parfum","Blue 1"]'::jsonb,
+    'open_beauty_facts', 90),
+  ('seed-aveeno-daily-moisturizer', 'Daily Moisturizing Lotion', 'Aveeno', 'moisturizer',
+    'Water, Glycerin, Distearyldimonium Chloride, Petrolatum, Isopropyl Palmitate, Cetyl Alcohol, Avena Sativa (Oat) Kernel Flour, Benzyl Alcohol',
+    '["Water","Glycerin","Distearyldimonium Chloride","Petrolatum","Isopropyl Palmitate","Cetyl Alcohol","Avena Sativa (Oat) Kernel Flour","Benzyl Alcohol"]'::jsonb,
+    'open_beauty_facts', 83),
+  ('seed-clinique-dramatically-different', 'Dramatically Different Moisturizing Lotion+', 'Clinique', 'moisturizer',
+    'Water, Cyclopentasiloxane, Butylene Glycol, Sesame Oil, Glycerin, Phenoxyethanol, Methylparaben, Propylparaben, Parfum',
+    '["Water","Cyclopentasiloxane","Butylene Glycol","Sesame Oil","Glycerin","Phenoxyethanol","Methylparaben","Propylparaben","Parfum"]'::jsonb,
+    'open_beauty_facts', 79),
+
+  -- ── sunscreen ─────────────────────────────────────────────────────────────
+  ('seed-eltamd-uv-clear', 'UV Clear Broad-Spectrum SPF 46', 'EltaMD', 'sunscreen',
+    'Active: Zinc Oxide 9%, Octinoxate 7.5%. Inactive: Water, Cyclopentasiloxane, Niacinamide, Sodium Hyaluronate, Tocopheryl Acetate, Phenoxyethanol',
+    '["Zinc Oxide","Octinoxate","Water","Cyclopentasiloxane","Niacinamide","Sodium Hyaluronate","Tocopheryl Acetate","Phenoxyethanol"]'::jsonb,
+    'open_beauty_facts', 92),
+  ('seed-coppertone-sport', 'Sport Sunscreen Lotion SPF 50', 'Coppertone', 'sunscreen',
+    'Avobenzone 3%, Homosalate 12%, Octisalate 5%, Octocrylene 7%, Oxybenzone 4%, Water, Parfum',
+    '["Avobenzone","Homosalate","Octisalate","Octocrylene","Oxybenzone","Water","Parfum"]'::jsonb,
+    'open_beauty_facts', 84),
+  ('seed-supergoop-unseen', 'Unseen Sunscreen SPF 40', 'Supergoop!', 'sunscreen',
+    'Avobenzone 3%, Homosalate 8%, Octisalate 5%, Octocrylene 5%. Water, Caprylic/Capric Triglyceride, Glycerin, Tocopheryl Acetate',
+    '["Avobenzone","Homosalate","Octisalate","Octocrylene","Water","Caprylic/Capric Triglyceride","Glycerin","Tocopheryl Acetate"]'::jsonb,
+    'open_beauty_facts', 81),
+
+  -- ── deodorant ─────────────────────────────────────────────────────────────
+  ('seed-dove-original-deo', 'Original Clean Antiperspirant Deodorant', 'Dove', 'deodorant',
+    'Aluminum Zirconium Tetrachlorohydrex GLY, Cyclopentasiloxane, Stearyl Alcohol, C12-15 Alkyl Benzoate, PPG-14 Butyl Ether, Parfum',
+    '["Aluminum Zirconium Tetrachlorohydrex GLY","Cyclopentasiloxane","Stearyl Alcohol","C12-15 Alkyl Benzoate","PPG-14 Butyl Ether","Parfum"]'::jsonb,
+    'open_beauty_facts', 88),
+  ('seed-degree-cool-rush', 'Cool Rush Antiperspirant', 'Degree', 'deodorant',
+    'Aluminum Zirconium Octachlorohydrex GLY, Cyclopentasiloxane, Stearyl Alcohol, Parfum, BHT',
+    '["Aluminum Zirconium Octachlorohydrex GLY","Cyclopentasiloxane","Stearyl Alcohol","Parfum","BHT"]'::jsonb,
+    'open_beauty_facts', 73),
+  ('seed-native-coconut-vanilla', 'Coconut & Vanilla Deodorant (Aluminum-Free)', 'Native', 'deodorant',
+    'Caprylic/Capric Triglyceride, Stearyl Alcohol, Ozokerite, Sodium Bicarbonate, Maranta Arundinacea Root Powder, Tocopheryl Acetate, Parfum',
+    '["Caprylic/Capric Triglyceride","Stearyl Alcohol","Ozokerite","Sodium Bicarbonate","Maranta Arundinacea Root Powder","Tocopheryl Acetate","Parfum"]'::jsonb,
+    'open_beauty_facts', 79),
+
+  -- ── toothpaste ────────────────────────────────────────────────────────────
+  ('seed-colgate-total', 'Total Whitening Toothpaste', 'Colgate', 'toothpaste',
+    'Sodium Fluoride, Water, Glycerin, Hydrated Silica, Sorbitol, PVM/MA Copolymer, Sodium Lauryl Sulfate, Parfum, Sodium Saccharin, Titanium Dioxide',
+    '["Sodium Fluoride","Water","Glycerin","Hydrated Silica","Sorbitol","PVM/MA Copolymer","Sodium Lauryl Sulfate","Parfum","Sodium Saccharin","Titanium Dioxide"]'::jsonb,
+    'open_beauty_facts', 90),
+  ('seed-sensodyne-rapid-relief', 'Rapid Relief Toothpaste', 'Sensodyne', 'toothpaste',
+    'Stannous Fluoride, Water, Glycerin, Sorbitol, Hydrated Silica, Sodium Lauryl Sulfate, Cocamidopropyl Betaine, Sodium Saccharin, Parfum',
+    '["Stannous Fluoride","Water","Glycerin","Sorbitol","Hydrated Silica","Sodium Lauryl Sulfate","Cocamidopropyl Betaine","Sodium Saccharin","Parfum"]'::jsonb,
+    'open_beauty_facts', 82),
+  ('seed-tom-of-maine-fluoride-free', 'Antiplaque & Whitening Fluoride-Free Toothpaste', 'Tom''s of Maine', 'toothpaste',
+    'Calcium Carbonate, Water, Glycerin, Hydrated Silica, Xylitol, Sodium Lauryl Sulfate, Mentha Piperita (Peppermint) Oil, Carrageenan',
+    '["Calcium Carbonate","Water","Glycerin","Hydrated Silica","Xylitol","Sodium Lauryl Sulfate","Mentha Piperita (Peppermint) Oil","Carrageenan"]'::jsonb,
+    'open_beauty_facts', 71),
+
+  -- ── serum ─────────────────────────────────────────────────────────────────
+  ('seed-ordinary-niacinamide', 'Niacinamide 10% + Zinc 1%', 'The Ordinary', 'serum',
+    'Water, Niacinamide, Pentylene Glycol, Zinc PCA, Dimethyl Isosorbide, Tamarindus Indica Seed Gum, Xanthan Gum, Phenoxyethanol, Chlorphenesin',
+    '["Water","Niacinamide","Pentylene Glycol","Zinc PCA","Dimethyl Isosorbide","Tamarindus Indica Seed Gum","Xanthan Gum","Phenoxyethanol","Chlorphenesin"]'::jsonb,
+    'open_beauty_facts', 94),
+  ('seed-ordinary-hyaluronic', 'Hyaluronic Acid 2% + B5', 'The Ordinary', 'serum',
+    'Water, Sodium Hyaluronate, Panthenol, Pentylene Glycol, Phenoxyethanol, Ethylhexylglycerin',
+    '["Water","Sodium Hyaluronate","Panthenol","Pentylene Glycol","Phenoxyethanol","Ethylhexylglycerin"]'::jsonb,
+    'open_beauty_facts', 93),
+  ('seed-paula-choice-bha', '2% BHA Liquid Exfoliant', 'Paula''s Choice', 'serum',
+    'Water, Methylpropanediol, Butylene Glycol, Salicylic Acid, Polysorbate 20, Camellia Sinensis Leaf Extract, Sodium Hydroxide',
+    '["Water","Methylpropanediol","Butylene Glycol","Salicylic Acid","Polysorbate 20","Camellia Sinensis Leaf Extract","Sodium Hydroxide"]'::jsonb,
+    'open_beauty_facts', 87),
+  ('seed-skinceuticals-ce-ferulic', 'C E Ferulic', 'SkinCeuticals', 'serum',
+    'Water, Ethoxydiglycol, L-Ascorbic Acid (15%), Propylene Glycol, Glycerin, Laureth-23, Tocopherol, Phenoxyethanol, Triethanolamine, Ferulic Acid, Panthenol, Sodium Hyaluronate',
+    '["Water","Ethoxydiglycol","L-Ascorbic Acid","Propylene Glycol","Glycerin","Laureth-23","Tocopherol","Phenoxyethanol","Triethanolamine","Ferulic Acid","Panthenol","Sodium Hyaluronate"]'::jsonb,
+    'open_beauty_facts', 80)
+
+on conflict (off_id) do nothing;

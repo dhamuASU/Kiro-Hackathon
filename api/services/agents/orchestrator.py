@@ -17,6 +17,7 @@ from services.agents.base import AbstractAgent
 from services.agents.profile_reasoner import ProfileReasonerAgent
 from services.agents.regulatory_xref import RegulatoryXrefAgent
 from services.agents.scanner import ScannerAgent
+from services.agents.wellness import WellnessAgent
 from services.events import EventBus
 from schemas.agent import (
     AlternativeFinderInput,
@@ -43,6 +44,9 @@ class OrchestratorAgent(AbstractAgent):
         self.analogy_writer = AnalogyWriterAgent(bus, db)
         self.alternative_finder = AlternativeFinderAgent(bus, db)
         self.regulatory_xref = RegulatoryXrefAgent(bus, db)
+        self.wellness = WellnessAgent(bus, db)
+        # Captured by run_from_rows so the analyze router can persist it.
+        self.last_wellness: dict | None = None
 
     async def run(self, input: Any) -> Any:
         return await self.run_from_rows(
@@ -96,7 +100,13 @@ class OrchestratorAgent(AbstractAgent):
             await self.emit("alternative_finder.done", {"count": 0})
             await self.emit("regulatory_xref.start", {"count": 0})
             await self.emit("regulatory_xref.done", {"banned_count": 0})
-            log.info("orchestrator: nothing flagged — short-circuit")
+            # Still produce a wellness payload — the dashboard expects it.
+            self.last_wellness = await self.wellness.run({
+                "profile": profile.model_dump(mode="json"),
+                "products": [p.model_dump(mode="json") for p in products],
+                "flagged": [],
+            })
+            log.info("orchestrator: nothing flagged — short-circuit, wellness ok")
             return []
 
         # ── 3a. Batch-resolve full IngredientOut for all ranked items ────────
@@ -150,9 +160,24 @@ class OrchestratorAgent(AbstractAgent):
             RegulatoryXrefInput(ingredient_ids=[r.ingredient_id for r in reasoner_out.flagged])
         )
 
-        analogy_results, alt_results, xref_out = await asyncio.gather(
-            analogy_task, alt_task, xref_task
+        wellness_task = self.wellness.run({
+            "profile": profile.model_dump(mode="json"),
+            "products": [p.model_dump(mode="json") for p in products],
+            "flagged": [
+                {
+                    "inci_name": ingredient_map[str(r.ingredient_id)].inci_name
+                                  if str(r.ingredient_id) in ingredient_map else "?",
+                    "relevance": r.relevance,
+                    "reason": r.reason,
+                }
+                for r in reasoner_out.flagged
+            ],
+        })
+
+        analogy_results, alt_results, xref_out, wellness_out = await asyncio.gather(
+            analogy_task, alt_task, xref_task, wellness_task
         )
+        self.last_wellness = wellness_out
         log.info("orchestrator: parallel phase done in %.2fs", time.monotonic() - t)
 
         await self.emit("analogy_writer.done", {"count": len(analogy_results)})

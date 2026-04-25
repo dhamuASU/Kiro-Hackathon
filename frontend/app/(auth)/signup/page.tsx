@@ -55,13 +55,16 @@ export default function SignupPage() {
       <main className="mx-auto grid min-h-[calc(100vh-68px)] max-w-[1100px] grid-cols-1 items-center gap-16 px-8 pb-16 pt-32 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <div className="eyebrow-mono mb-6">Start free</div>
-          <h1 className="mb-6">
+          <h1
+            className="mb-6"
+            style={{ fontSize: "clamp(34px, 4.2vw, 52px)", lineHeight: 1.05 }}
+          >
             Three minutes in.{" "}
             <span className="block italic text-[var(--teal)]">
               A chemistry friend for life.
             </span>
           </h1>
-          <p className="mb-8 max-w-[46ch] text-[17px] text-[var(--muted)]">
+          <p className="mb-8 max-w-[46ch] text-[15px] text-[var(--muted)]">
             Give us an email, tell us about your skin, point at what&rsquo;s in your bathroom.
             We&rsquo;ll do the rest — and we won&rsquo;t sell anything to get there.
           </p>
