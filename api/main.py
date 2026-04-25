@@ -1,4 +1,15 @@
+import logging
+
 from fastapi import FastAPI, Request
+
+# Surface structured logs from agents/orchestrator into the uvicorn console.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-7s %(name)s | %(message)s",
+    datefmt="%H:%M:%S",
+)
+for noisy in ("httpx", "httpcore", "google_genai", "hpack"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware

@@ -55,13 +55,12 @@ async def test_curated_generic_fallback(bus):
     assert out.analogy_one_liner == "generic"
 
 
-async def test_llm_fact_check_passes(bus):
+async def test_llm_clean_passes(bus):
+    """No more 2-pass fact-check — a single LLM call returns and we accept if no banned words."""
     db = _db_curated([], [])
-    with (
-        patch("services.agents.analogy_writer.llm_client.write_analogy",
-              new=AsyncMock(return_value={"analogy_one_liner": "SLS is like dish soap", "full_explanation": "..."})),
-        patch("services.agents.analogy_writer.llm_client.fact_check_analogy",
-              new=AsyncMock(return_value={"passed": True, "reason": "accurate"})),
+    with patch(
+        "services.agents.analogy_writer.llm_client.write_analogy",
+        new=AsyncMock(return_value={"analogy_one_liner": "SLS is like dish soap", "full_explanation": "..."}),
     ):
         out = await AnalogyWriterAgent(bus, db).run(_inp())
     assert out.source == "llm"
@@ -69,13 +68,11 @@ async def test_llm_fact_check_passes(bus):
     assert out.analogy_one_liner == "SLS is like dish soap"
 
 
-async def test_llm_fact_check_fails(bus):
+async def test_llm_failure_returns_empty(bus):
     db = _db_curated([], [])
-    with (
-        patch("services.agents.analogy_writer.llm_client.write_analogy",
-              new=AsyncMock(return_value={"analogy_one_liner": "overstated", "full_explanation": "..."})),
-        patch("services.agents.analogy_writer.llm_client.fact_check_analogy",
-              new=AsyncMock(return_value={"passed": False, "reason": "overstates harm"})),
+    with patch(
+        "services.agents.analogy_writer.llm_client.write_analogy",
+        new=AsyncMock(side_effect=RuntimeError("upstream timeout")),
     ):
         out = await AnalogyWriterAgent(bus, db).run(_inp())
     assert out.fact_check_passed is False

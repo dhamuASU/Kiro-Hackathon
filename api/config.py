@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     supabase_jwt_secret: str = ""
     vertexai_api_key: str
     vertexai_location: str = "global"
-    gemini_model: str = "gemini-2.5-flash"
+    # flash-lite is ~3x faster than flash for our short JSON outputs.
+    # Override with GEMINI_MODEL=gemini-2.5-flash for higher quality.
+    gemini_model: str = "gemini-2.5-flash-lite"
     anthropic_api_key: str = ""  # deprecated
     claude_model: str = ""  # deprecated
     obf_base_url: str = "https://world.openbeautyfacts.org/api/v2"

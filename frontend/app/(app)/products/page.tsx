@@ -38,7 +38,7 @@ export default function ProductsPage() {
   const load = async () => {
     try {
       const r = await api.listUserProducts();
-      setItems(r.user_products);
+      setItems(r ?? []);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't load products");
       setItems([]);

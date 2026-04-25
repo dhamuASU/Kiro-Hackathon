@@ -163,8 +163,7 @@ export const api = {
 
   // ═══ User products ═══════════════════════════════════════════════════
 
-  listUserProducts: () =>
-    request<{ user_products: UserProductOut[] }>("/user-products"),
+  listUserProducts: () => request<UserProductOut[]>("/user-products"),
 
   addUserProduct: (body: {
     category_slug: string;
@@ -202,6 +201,8 @@ export const api = {
     request<AnalysisCreateResponse>("/analyze", { method: "POST" }),
 
   getAnalysis: (id: string) => request<AnalysisOut>(`/analyze/${id}`),
+
+  getLatestAnalysis: () => request<AnalysisOut | null>("/analyze/latest"),
 
   analysisStreamUrl: (id: string) => `${BASE}/analyze/${id}/stream`,
 

@@ -65,7 +65,15 @@ function AnalyzingStep() {
             return;
           }
           const [agentSlug, phase] = String(event).split(".");
-          if (phase === "done") {
+          if (phase === "start") {
+            setAgents((prev) =>
+              prev.map((a) =>
+                a.slug === agentSlug && a.status === "pending"
+                  ? { ...a, status: "running" }
+                  : a,
+              ),
+            );
+          } else if (phase === "done") {
             setAgents((prev) => {
               const next = prev.map((a) =>
                 a.slug === agentSlug ? { ...a, status: "done" as const } : a,

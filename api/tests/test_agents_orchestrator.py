@@ -70,7 +70,7 @@ async def test_all_done_events_emitted(bus):
 
     db = MagicMock()
     # ingredient lookup for analogy writer
-    db.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+    db.table.return_value.select.return_value.in_.return_value.execute.return_value.data = [
         {
             "id": str(iid), "inci_name": "SLS", "plain_english": "surfactant",
             "hazard_tags": ["irritant"], "goals_against": [], "bad_for_skin_types": [],
@@ -130,7 +130,7 @@ async def test_fact_check_failed_analogy_suppressed(bus):
     )
 
     db = MagicMock()
-    db.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [
+    db.table.return_value.select.return_value.in_.return_value.execute.return_value.data = [
         {
             "id": str(iid), "inci_name": "SLS", "plain_english": "surfactant",
             "hazard_tags": ["irritant"], "goals_against": [], "bad_for_skin_types": [],

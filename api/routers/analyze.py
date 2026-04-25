@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -11,6 +12,8 @@ from deps import CurrentUser, SupabaseClient
 from schemas.analysis import AnalysisCreateResponse, AnalysisOut
 from services.agents.orchestrator import OrchestratorAgent
 from services.events import EventBus
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analyze", tags=["analyze"])
 
@@ -62,6 +65,23 @@ async def stream_analysis(analysis_id: str, user: CurrentUser) -> EventSourceRes
     return EventSourceResponse(generator())
 
 
+@router.get("/latest", response_model=AnalysisOut | None)
+async def latest_analysis(user: CurrentUser, db: SupabaseClient) -> AnalysisOut | None:
+    """Most recent completed analysis for the user, or None."""
+    result = (
+        db.table("analyses")
+        .select("*")
+        .eq("user_id", user["sub"])
+        .eq("status", "completed")
+        .order("completed_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not result.data:
+        return None
+    return AnalysisOut(**result.data[0])
+
+
 @router.get("/{analysis_id}", response_model=AnalysisOut)
 async def get_analysis(analysis_id: str, user: CurrentUser, db: SupabaseClient) -> AnalysisOut:
     result = (
@@ -77,6 +97,7 @@ async def get_analysis(analysis_id: str, user: CurrentUser, db: SupabaseClient) 
 
 async def _run(analysis_id: str, user_id: str, db: SupabaseClient, bus: EventBus) -> None:
     start = time.monotonic()
+    log.info("analyze: start id=%s user=%s", analysis_id, user_id)
     try:
         db.table("analyses").update({"status": "running"}).eq("id", analysis_id).execute()
 
@@ -87,6 +108,7 @@ async def _run(analysis_id: str, user_id: str, db: SupabaseClient, bus: EventBus
             .eq("user_id", user_id)
             .execute()
         )
+        log.info("analyze: id=%s products=%d", analysis_id, len(product_rows.data or []))
 
         orchestrator = OrchestratorAgent(bus=bus, db=db)
         output = await orchestrator.run_from_rows(
@@ -100,12 +122,15 @@ async def _run(analysis_id: str, user_id: str, db: SupabaseClient, bus: EventBus
             "status": "completed",
             "output": output,
             "duration_ms": duration_ms,
-            "llm_model": settings.claude_model,
+            "llm_model": settings.gemini_model,
             "completed_at": datetime.now(timezone.utc).isoformat(),
         }).eq("id", analysis_id).execute()
 
-        await bus.emit("done", {"analysis_id": analysis_id})
+        log.info("analyze: done id=%s in %dms reports=%d",
+                 analysis_id, duration_ms, len(output))
+        await bus.emit("done", {"analysis_id": analysis_id, "duration_ms": duration_ms})
     except Exception as exc:
+        log.exception("analyze: failed id=%s err=%s", analysis_id, exc)
         db.table("analyses").update({"status": "failed", "error": str(exc)}).eq("id", analysis_id).execute()
         await bus.emit("error", {"detail": str(exc)})
     finally:

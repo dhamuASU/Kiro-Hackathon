@@ -36,10 +36,18 @@ def _get_client():
 
 def _get_config():
     from google.genai import types
-    return types.GenerateContentConfig(
+    # Tight HTTP timeout; per-agent asyncio.wait_for() also bounds wall time.
+    # Try to disable thinking on 2.5-flash for ~3-5x speedup; fall back if the
+    # SDK doesn't support that field.
+    base = dict(
         response_mime_type="application/json",
-        http_options=types.HttpOptions(timeout=30000),
+        http_options=types.HttpOptions(timeout=12000),
     )
+    try:
+        base["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+    except Exception:
+        pass
+    return types.GenerateContentConfig(**base)
 
 
 def _make_part_from_bytes(data: bytes, mime_type: str):
@@ -53,11 +61,16 @@ def _make_part_from_text(text: str):
 
 
 async def _generate_json(contents) -> dict | list:
+    import logging
+    log = logging.getLogger(__name__)
+    import time
+    t = time.monotonic()
     response = await _get_client().aio.models.generate_content(
         model=settings.gemini_model,
         contents=contents,
         config=_get_config(),
     )
+    log.info("llm: %s in %.2fs", settings.gemini_model, time.monotonic() - t)
     return json.loads(response.text)
 
 
