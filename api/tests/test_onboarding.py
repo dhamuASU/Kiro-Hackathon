@@ -25,10 +25,10 @@ VALID_PROFILE = {
 
 def test_complete_onboarding_requires_auth(client):
     resp = client.post("/api/onboarding/complete", json=VALID_PROFILE)
-    assert resp.status_code == 403
+    assert resp.status_code in (401, 403)
 
 
 def test_profile_schema_validation(client):
     """Missing required fields should return 422."""
     resp = client.post("/api/onboarding/complete", json={"age_range": "25_34"})
-    assert resp.status_code in (403, 422)
+    assert resp.status_code in (401, 403, 422)

@@ -1,161 +1,179 @@
 """
 LLM client — OWNED BY AGENTS TEAMMATE.
 
-Every method below is a stub. The signatures + docstrings are the contract
-the rest of the backend builds against (routers, agents, OCR). Fill in the
-implementations using the Anthropic SDK (`anthropic.AsyncAnthropic`) with
-`settings.claude_model` and the prompt templates in `services/llm/prompts.py`.
-
-Conventions:
-- All methods are async.
-- JSON-returning methods MUST return a parsed dict/list (no markdown fences).
-- Vision methods accept a base64-encoded JPEG string.
-- On upstream failure the router layer wraps errors into a `LLM_FAILURE`
-  error envelope — feel free to raise normal exceptions from here.
+Wraps Google Vertex AI (gemini-2.5-flash) via the google-genai SDK.
+All methods are async. JSON methods use response_mime_type=application/json
+for native enforcement. Vision methods accept base64-encoded JPEG strings.
 """
-import anthropic
+import base64
+import json
+import re
 
 from config import settings
 
-_client: anthropic.AsyncAnthropic | None = None
+_client = None
 
 
-def _get_client() -> anthropic.AsyncAnthropic:
-    """Lazy-init Anthropic async client. Safe to use; do not stub."""
+def _get_client():
     global _client
     if _client is None:
-        _client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        from google import genai  # lazy import — avoids crash when mocked in tests
+        _client = genai.Client(
+            vertexai=True,
+            api_key=settings.vertexai_api_key,
+            location=settings.vertexai_location,
+        )
     return _client
+
+
+def _get_config():
+    from google.genai import types
+    return types.GenerateContentConfig(
+        response_mime_type="application/json",
+        http_options=types.HttpOptions(timeout=30000),
+    )
+
+
+def _make_part_from_bytes(data: bytes, mime_type: str):
+    from google.genai import types
+    return types.Part.from_bytes(data=data, mime_type=mime_type)
+
+
+def _make_part_from_text(text: str):
+    from google.genai import types
+    return types.Part.from_text(text)
+
+
+async def _generate_json(contents) -> dict | list:
+    response = await _get_client().aio.models.generate_content(
+        model=settings.gemini_model,
+        contents=contents,
+        config=_get_config(),
+    )
+    return json.loads(response.text)
+
+
+def _normalize_ingredients(raw: str) -> list[str]:
+    """Split on , or ;, strip parenthetical notes, title-case, drop empties."""
+    tokens = re.split(r"[,;]", raw)
+    result = []
+    for t in tokens:
+        t = re.sub(r"\s*\(.*?\)", "", t).strip()
+        if t:
+            result.append(t.title())
+    return result
 
 
 class LLMClient:
     async def classify_ingredient(self, inci_name: str, prompt: str) -> dict:
         """
-        TODO [agents teammate]: Classify whether a single INCI ingredient is a
-        concern. Called by ScannerAgent for ingredients NOT found in the
-        local `ingredients` table (~5% of cases).
-
-        Contract:
-          input  → inci_name (e.g. "Sodium Lauryl Sulfate"), prompt (system
-                   prompt; pass SCANNER_PROMPT from services.llm.prompts)
-          output → {"is_concerning": bool, "hazard_tags": [str]}
-                   hazard_tags drawn from:
-                     endocrine_disruptor | irritant | sensitizer | drying
-                     comedogenic | photoreactive | formaldehyde_releaser
+        Returns {"is_concerning": bool, "hazard_tags": [str]}
         """
-        raise NotImplementedError("classify_ingredient — owned by agents teammate")
+        contents = f"{prompt}\n\nIngredient: {inci_name}"
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def rank_ingredients(self, profile: dict, flagged: list[dict], prompt: str) -> list[dict]:
         """
-        TODO [agents teammate]: Rank flagged ingredients by relevance to THIS
-        user's skin type + goals. Called by ProfileReasonerAgent.
-
-        Contract:
-          input  → profile (ProfileOut dict: age_range, gender, skin_type,
-                   skin_goals, allergies, life_stage); flagged (array of
-                   {product_id, inci_name, hazard_tags}); PROFILE_REASONER_PROMPT
-          output → [{"inci_name": str, "product_id": str,
-                    "relevance": "high"|"medium"|"low", "reason": str}, ...]
-
-        Logic hint: HIGH when the ingredient's goals_against intersects the
-        user's skin_goals; bump further if bad_for_skin_types matches.
+        Returns [{"inci_name": str, "product_id": str, "relevance": str, "reason": str}, ...]
         """
-        raise NotImplementedError("rank_ingredients — owned by agents teammate")
+        contents = (
+            f"{prompt}\n\n"
+            f"User profile: {json.dumps(profile)}\n\n"
+            f"Flagged ingredients: {json.dumps(flagged)}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def write_analogy(self, ingredient: dict, profile: dict, goal_slug: str, prompt: str) -> dict:
         """
-        TODO [agents teammate]: Generate an analogy-first explanation for one
-        flagged ingredient, calibrated to one user goal. Called by
-        AnalogyWriterAgent only when no curated analogy exists in the
-        `analogies` table.
-
-        Contract:
-          input  → ingredient (IngredientOut dict), profile (ProfileOut dict),
-                   goal_slug (one of the skin_goals), ANALOGY_WRITER_PROMPT
-          output → {"analogy_one_liner": str, "full_explanation": str}
-
-        Rules (also in the prompt — but enforce any way you can):
-          1. Respect dose.
-          2. Respect the user's goal.
-          3. Be true.
-          4. Never use the word "TOXIC". No scare tactics.
+        Returns {"analogy_one_liner": str, "full_explanation": str}
         """
-        raise NotImplementedError("write_analogy — owned by agents teammate")
+        contents = (
+            f"{prompt}\n\n"
+            f"Ingredient: {json.dumps(ingredient)}\n"
+            f"User profile: {json.dumps(profile)}\n"
+            f"Goal: {goal_slug}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def fact_check_analogy(self, analogy: str, ingredient: dict, prompt: str) -> dict:
         """
-        TODO [agents teammate]: Second LLM pass that validates the chemistry in
-        a generated analogy. Called immediately after write_analogy().
-
-        Contract:
-          input  → analogy (one-liner string), ingredient (IngredientOut dict),
-                   ANALOGY_FACTCHECK_PROMPT
-          output → {"passed": bool, "reason": str}
-
-        If passed is False, the router stores the analogy with
-        fact_check_passed=False so the frontend can suppress or flag it.
+        Returns {"passed": bool, "reason": str}
         """
-        raise NotImplementedError("fact_check_analogy — owned by agents teammate")
+        contents = (
+            f"{prompt}\n\n"
+            f"Analogy: {analogy}\n"
+            f"Ingredient: {json.dumps(ingredient)}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
 
-    async def find_alternatives(self, category_slug: str, avoid_tags: list[str], profile: dict, prompt: str) -> list[dict]:
+    async def find_alternatives(
+        self, category_slug: str, avoid_tags: list[str], profile: dict, prompt: str
+    ) -> list[dict]:
         """
-        TODO [agents teammate]: LLM fallback for AlternativeFinderAgent when the
-        curated `alternatives` table has no matches for the category +
-        avoid_tags combo.
-
-        Contract:
-          input  → category_slug, avoid_tags (list[str]), profile (dict),
-                   ALTERNATIVE_FINDER_PROMPT
-          output → 1–3 items: [{"name": str, "brand": str, "price": str,
-                   "reason": str}, ...]
+        Returns [{"name": str, "brand": str, "price": str, "reason": str}, ...]
         """
-        raise NotImplementedError("find_alternatives — owned by agents teammate")
+        contents = (
+            f"{prompt}\n\n"
+            f"Category: {category_slug}\n"
+            f"Avoid tags: {json.dumps(avoid_tags)}\n"
+            f"User profile: {json.dumps(profile)}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def resolve_product(self, brand: str, name: str, category_slug: str, prompt: str) -> dict:
         """
-        TODO [agents teammate]: Given a brand + product name + category, return
-        the most likely ingredient list (INCI). Called by POST
-        /api/products/resolve when Open Beauty Facts has no match.
-
-        Contract:
-          input  → brand, name, category_slug, PRODUCT_RESOLVER_PROMPT
-          output → {"ingredients_parsed": [str], "confidence": float,
-                    "image_url": str | null}
-
-        Guardrails: if you aren't confident the product exists, return
-        confidence < 0.3 and an empty ingredients_parsed. The router will
-        surface a warning to the user when confidence < 0.7.
+        Returns {"ingredients_parsed": [str], "confidence": float, "image_url": str | None}
         """
-        raise NotImplementedError("resolve_product — owned by agents teammate")
+        contents = (
+            f"{prompt}\n\n"
+            f"Brand: {brand}\n"
+            f"Product: {name}\n"
+            f"Category: {category_slug}"
+        )
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def extract_label_front(self, image_base64: str) -> dict:
         """
-        TODO [agents teammate]: Claude vision — extract brand + product name
-        from a photo of the FRONT of a cosmetic product. Called by the
-        POST /api/scan/label (mode=front) flow.
-
-        Contract:
-          input  → image_base64 (JPEG, up to ~10 MB raw)
-          output → {"brand": str, "product_name": str, "confidence": float}
+        Returns {"brand": str, "product_name": str, "confidence": float}
         """
-        raise NotImplementedError("extract_label_front — owned by agents teammate")
+        contents = [
+            _make_part_from_bytes(base64.b64decode(image_base64), "image/jpeg"),
+            _make_part_from_text(
+                "Extract the brand name and product name from this cosmetic product label. "
+                "Return JSON only, no prose, no code fences. "
+                'Schema: {"brand": str, "product_name": str, "confidence": float}'
+            ),
+        ]
+        return await _generate_json(contents)  # type: ignore[return-value]
 
     async def extract_label_back(self, image_base64: str) -> dict:
         """
-        TODO [agents teammate]: Claude vision — extract the ingredient list
-        from a photo of the BACK of a cosmetic product. Called by the
-        POST /api/scan/label (mode=back) flow.
-
-        Contract:
-          input  → image_base64 (JPEG, up to ~10 MB raw)
-          output → {"ingredients_raw": str, "ingredients_parsed": [str],
-                    "confidence": float}
-
-        The router auto-persists the result as a `user_paste`-source product
-        when confidence >= 0.7; below that threshold the user is asked to
-        confirm the extracted text.
+        Returns {"ingredients_raw": str, "ingredients_parsed": [str], "confidence": float}
         """
-        raise NotImplementedError("extract_label_back — owned by agents teammate")
+        contents = [
+            _make_part_from_bytes(base64.b64decode(image_base64), "image/jpeg"),
+            _make_part_from_text(
+                "Extract the full ingredient list from this cosmetic product back label. "
+                "Return the raw text as-is in ingredients_raw, and a parsed list of individual "
+                "INCI names in ingredients_parsed. "
+                "Return JSON only, no prose, no code fences. "
+                'Schema: {"ingredients_raw": str, "ingredients_parsed": [str], "confidence": float}'
+            ),
+        ]
+        result: dict = await _generate_json(contents)  # type: ignore[assignment]
+        # Normalize: re-parse from raw if model didn't split, then clean up
+        raw = result.get("ingredients_raw", "")
+        parsed = result.get("ingredients_parsed") or []
+        if not parsed and raw:
+            parsed = _normalize_ingredients(raw)
+        else:
+            parsed = [
+                re.sub(r"\s*\(.*?\)", "", t).strip().title()
+                for t in parsed
+                if re.sub(r"\s*\(.*?\)", "", t).strip()
+            ]
+        result["ingredients_parsed"] = parsed
+        return result
 
 
 llm_client = LLMClient()

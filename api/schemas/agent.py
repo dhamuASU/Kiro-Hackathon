@@ -54,7 +54,7 @@ class AnalogyWriterInput(BaseModel):
 
 
 class AnalogyWriterOutput(BaseModel):
-    analogy_one_liner: str
+    analogy_one_liner: str | None
     full_explanation: str
     source: Literal["curated", "llm"]
     fact_check_passed: bool

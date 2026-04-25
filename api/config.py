@@ -7,8 +7,11 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_role_key: str
     supabase_jwt_secret: str
-    anthropic_api_key: str
-    claude_model: str = "claude-3-5-haiku-20241022"
+    vertexai_api_key: str
+    vertexai_location: str = "global"
+    gemini_model: str = "gemini-2.5-flash"
+    anthropic_api_key: str = ""  # deprecated
+    claude_model: str = ""  # deprecated
     obf_base_url: str = "https://world.openbeautyfacts.org/api/v2"
     environment: str = "development"
     cors_origins: list[str] = ["http://localhost:3000"]
