@@ -1,4 +1,6 @@
-# CleanLabel (DermaDecode)
+# CleanLabel
+
+**Live Demo:** [kirocleanlabel.netlify.app](https://kirocleanlabel.netlify.app/)
 
 A personal skincare coach that explains the chemistry in your bathroom using
 everyday analogies — not scare tactics. Onboard once, tell us your skin type
