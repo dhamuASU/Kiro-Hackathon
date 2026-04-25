@@ -494,15 +494,7 @@ function ProductReportCard({
           ) : (
             <SeverityBar severity={severity} total={totalCount} />
           )}
-          <span
-            className={cn(
-              "text-[14px] text-[var(--muted)] transition-transform",
-              expanded && "rotate-180",
-            )}
-            aria-hidden
-          >
-            ▾
-          </span>
+          <Chevron open={expanded} />
         </div>
       </button>
 
@@ -510,7 +502,7 @@ function ProductReportCard({
         <>
           {flagged.length === 0 ? (
             <div className="bg-[var(--sage-soft)] px-7 py-7">
-              <p className="font-serif text-[20px] italic text-[var(--sage)]">
+              <p className="font-serif text-[20px] italic text-[var(--teal)]">
                 Nothing in this product is working against your stated goals. Keep it.
               </p>
             </div>
@@ -557,14 +549,8 @@ function ProductReportCard({
                           </p>
                         )}
                       </div>
-                      <span
-                        className={cn(
-                          "ml-3 mt-1 text-[12px] text-[var(--muted)] transition-transform",
-                          isOpen && "rotate-180",
-                        )}
-                        aria-hidden
-                      >
-                        ▾
+                      <span className="ml-3 mt-1 shrink-0">
+                        <Chevron open={isOpen} size="sm" />
                       </span>
                     </button>
 
@@ -682,6 +668,29 @@ function RelevanceTag({ relevance }: { relevance: string }) {
       </span>
     );
   return null;
+}
+
+function Chevron({ open, size = "md" }: { open: boolean; size?: "sm" | "md" }) {
+  const px = size === "sm" ? 14 : 18;
+  return (
+    <svg
+      aria-hidden
+      width={px}
+      height={px}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn(
+        "shrink-0 text-[var(--muted)] transition-transform duration-200",
+        open && "rotate-180 text-[var(--ink)]",
+      )}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
 }
 
 function Chip({ tone, children }: { tone: "clear" | "note"; children: React.ReactNode }) {
@@ -940,9 +949,9 @@ function RoutineStepRow({ step }: { step: RoutineStep }) {
           {step.why}
         </p>
         {step.key_ingredient && (
-          <div className="mt-2 inline-flex items-center gap-2 rounded-sm bg-[var(--sage-soft)]/50 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--sage)]">
-            <span className="h-1 w-1 rounded-full bg-[var(--sage)]" />
-            {step.key_ingredient}
+          <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-sm border border-[var(--sage)] bg-[var(--sage-soft)] px-3 py-1.5 text-[12px] leading-snug text-[var(--ink)]">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--sage)]" />
+            <span className="break-words normal-case">{step.key_ingredient}</span>
           </div>
         )}
       </div>

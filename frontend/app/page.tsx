@@ -23,32 +23,32 @@ export default function LandingPage() {
               <div className="eyebrow-mono reveal mb-7">Personal chemistry coach</div>
               <h1 className="mb-0">
                 <span className="block reveal" data-delay="1">
-                  Most ingredients aren&rsquo;t bad.
+                  Skincare isn&rsquo;t one-size-fits-all.
                 </span>
                 <span
                   className="block italic text-[var(--teal)] reveal"
                   data-delay="2"
                 >
-                  Some just aren&rsquo;t bad <em>for&nbsp;you</em>.
+                  Your bathroom shouldn&rsquo;t be either.
                 </span>
               </h1>
               <p
                 className="reveal mt-7 max-w-[520px] text-[clamp(17px,1.4vw,20px)] leading-[1.5] text-[var(--muted)]"
                 data-delay="3"
               >
-                Tell us your skin and your goals. We&rsquo;ll decode every product in
-                your bathroom &mdash; and explain the chemistry like a friend, not a
-                label.
+                Five AI agents read every label in your routine, weigh each
+                ingredient against your skin and goals, and explain the chemistry
+                like a friend — not a horror movie.
               </p>
               <div
                 className="reveal mt-9 flex flex-wrap items-center gap-7"
                 data-delay="4"
               >
                 <Link href="/signup" className="btn btn-lg">
-                  Decode my bathroom <span className="arrow">→</span>
+                  Start free <span className="arrow">→</span>
                 </Link>
-                <a href="#reports" className="text-link">
-                  See an example report <span className="arrow">→</span>
+                <a href="#try-demo" className="text-link">
+                  Try the demo first <span className="arrow">→</span>
                 </a>
               </div>
               <div
@@ -901,7 +901,7 @@ function DemoSection() {
   const reset = () => setPhase("idle");
 
   return (
-    <section id="demo" className="scroll-mt-24 border-y border-[var(--hairline)] bg-[var(--paper)]/40 py-24">
+    <section id="try-demo" className="scroll-mt-24 border-y border-[var(--hairline)] bg-[var(--paper)]/40 py-24">
       <div className="mx-auto max-w-[1240px] px-8">
         <div className="mb-12 text-center">
           <div className="eyebrow-mono mx-auto mb-5 inline-flex items-center gap-2.5 text-[var(--sage)]">
